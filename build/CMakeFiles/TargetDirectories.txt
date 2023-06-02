@@ -111,6 +111,13 @@
 /home/romi/workspace/build/co_transform/CMakeFiles/rebuild_cache.dir
 /home/romi/workspace/build/co_transform/CMakeFiles/edit_cache.dir
 /home/romi/workspace/build/co_transform/CMakeFiles/test.dir
+/home/romi/workspace/build/mpc/CMakeFiles/install/strip.dir
+/home/romi/workspace/build/mpc/CMakeFiles/install/local.dir
+/home/romi/workspace/build/mpc/CMakeFiles/install.dir
+/home/romi/workspace/build/mpc/CMakeFiles/list_install_components.dir
+/home/romi/workspace/build/mpc/CMakeFiles/rebuild_cache.dir
+/home/romi/workspace/build/mpc/CMakeFiles/edit_cache.dir
+/home/romi/workspace/build/mpc/CMakeFiles/test.dir
 /home/romi/workspace/build/camera_drive/CMakeFiles/install/strip.dir
 /home/romi/workspace/build/camera_drive/CMakeFiles/install/local.dir
 /home/romi/workspace/build/camera_drive/CMakeFiles/install.dir

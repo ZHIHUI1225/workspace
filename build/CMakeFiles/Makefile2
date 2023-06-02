@@ -58,6 +58,7 @@ all: robot_mag/all
 all: starlaunch/all
 all: beginner_tutorials/all
 all: co_transform/all
+all: mpc/all
 all: camera_drive/all
 all: agent_position/all
 all: learning_tf/all
@@ -70,6 +71,7 @@ preinstall: robot_mag/preinstall
 preinstall: starlaunch/preinstall
 preinstall: beginner_tutorials/preinstall
 preinstall: co_transform/preinstall
+preinstall: mpc/preinstall
 preinstall: camera_drive/preinstall
 preinstall: agent_position/preinstall
 preinstall: learning_tf/preinstall
@@ -87,6 +89,7 @@ clean: robot_mag/clean
 clean: starlaunch/clean
 clean: beginner_tutorials/clean
 clean: co_transform/clean
+clean: mpc/clean
 clean: camera_drive/clean
 clean: agent_position/clean
 clean: learning_tf/clean
@@ -297,6 +300,24 @@ learning_tf/preinstall:
 learning_tf/clean: learning_tf/CMakeFiles/tf_broadcaster.dir/clean
 
 .PHONY : learning_tf/clean
+
+#=============================================================================
+# Directory level rules for directory mpc
+
+# Recursive "all" directory target.
+mpc/all:
+
+.PHONY : mpc/all
+
+# Recursive "preinstall" directory target.
+mpc/preinstall:
+
+.PHONY : mpc/preinstall
+
+# Recursive "clean" directory target.
+mpc/clean:
+
+.PHONY : mpc/clean
 
 #=============================================================================
 # Directory level rules for directory robot_mag
