@@ -55,27 +55,6 @@ class frame_image():
         # cv2.imshow("image_tf",self.image)
         # cv2.waitKey(3)
 
-class QRrobot:
-    def __init__(self):
-        self.robotx=[0.0]*10
-        self.roboty=[0.0]*10
-        self.robotyaw=[0.0]*10
-        self.robotID=[0]*10
-        self.sub = rospy.Subscriber('/robot', robot_pose_array, self.pose_callback,queue_size=10)
-        
-
-    def pose_callback(self, msg): # feedback means actual value.
-        #print(len(msg.robot_pose_array))
-        for i in range(len(msg.robot_pose_array)):
-            if msg.robot_pose_array[i].ID.data>=10:
-                ID=int(msg.robot_pose_array[i].ID.data-10)
-            else:
-                ID=int(msg.robot_pose_array[i].ID.data) #ID
-            self.robotx[ID]=msg.robot_pose_array[i].position.x
-            self.roboty[ID]=msg.robot_pose_array[i].position.y
-            self.robotID[ID]=msg.robot_pose_array[i].ID.data
-            self.robotyaw[ID]=msg.robot_pose_array[i].yaw
-
 class TFListener:
 
     def __init__(self,source_frame,target_frame):
@@ -127,7 +106,7 @@ class TFListener:
             self.tf_listener.waitForTransform(self.source_frame,self.target_frame,now,rospy.Duration(1.0))
             (tran, rot) = self.tf_listener.lookupTransform(self.source_frame, self.target_frame , rospy.Time(0))
             transformed_pose = PoseArray()
-            transformed_pose.header = self.source_frame
+            transformed_pose.header.frame_id = self.source_frame
             pose_stamped = PoseStamped()
             pose_stamped.header.frame_id = self.target_frame
             for i in range(len(input)):
@@ -139,50 +118,49 @@ class TFListener:
             rospy.loginfo(
                 f'Could not transform {self.target_frame} to {self.source_frame}: {ex}')
             return
-def pointcloud_to_posearray(pc):
-    # 创建一个空的PoseArray对象
-    pose_array = PoseArray()
-    # 设置PoseArray的header
-    pose_array.header = pc.header
-    # 创建一个新的Pose对象
-    pose = Pose()
-    # 遍历PointCloud中的每个点
-    for point in pc.points:
-        # 将点的位置设置为Pose的位置
-        pose.position = point
-        # 将Pose添加到PoseArray中
-        pose_array.poses.append(pose)
-    return pose_array
+# def pointcloud_to_posearray(pc):
+#     # 创建一个空的PoseArray对象
+#     pose_array = PoseArray()
+#     # 设置PoseArray的header
+#     pose_array.header = pc.header
+#     # 创建一个新的Pose对象
+#     pose = Pose()
+#     # 遍历PointCloud中的每个点
+#     for point in pc.points:
+#         # 将点的位置设置为Pose的位置
+#         pose.position = point
+#         # 将Pose添加到PoseArray中
+#         pose_array.poses.append(pose)
+#     return pose_array
 
-def polynomial_curve_fit(key_point, n):
-    # Number of key points
-    N = len(key_point)
-    #print(key_point)
-    # Construct matrix X
-    X = np.zeros((n + 1, n + 1))
-    for i in range(n + 1):
-        for j in range(n + 1):
-            for k in range(N):
-                X[i][j] += key_point[k][0] ** (i + j)
-    # Construct matrix Y
-    Y = np.zeros((n + 1, 1))
-    for i in range(n + 1):
-        for k in range(N):
-            Y[i][0] += key_point[k][0] ** i * key_point[k][1]
-    # Solve matrix A
-    A = np.zeros((n + 1, 1))
-    A = np.linalg.solve(X, Y)
-    return A
+# def polynomial_curve_fit(key_point, n):
+#     # Number of key points
+#     N = len(key_point)
+#     #print(key_point)
+#     # Construct matrix X
+#     X = np.zeros((n + 1, n + 1))
+#     for i in range(n + 1):
+#         for j in range(n + 1):
+#             for k in range(N):
+#                 X[i][j] += key_point[k][0] ** (i + j)
+#     # Construct matrix Y
+#     Y = np.zeros((n + 1, 1))
+#     for i in range(n + 1):
+#         for k in range(N):
+#             Y[i][0] += key_point[k][0] ** i * key_point[k][1]
+#     # Solve matrix A
+#     A = np.zeros((n + 1, 1))
+#     A = np.linalg.solve(X, Y)
+#     return A
 
 
 if __name__ == '__main__':
     try:
         rospy.init_node('tf_listener_node')
-        Robot = QRrobot()
         tube=TUBE()
         tf_w2l= TFListener('world','local')
         Frame=frame_image()
-
+        feature_points_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         # listener_w2l = tf.TransformListener()
         rate = rospy.Rate(10.0)
         while not rospy.is_shutdown() :
@@ -218,6 +196,7 @@ if __name__ == '__main__':
                            
                     # print(pc_10)
                     feature_points=tf_w2l.transform_back(pc_10)
+                    feature_points_pub.publish(feature_points)
                     for pose in feature_points.poses:
                         center=(int(pose.position.x),int(pose.position.y))
                         if Frame.image is not None:
