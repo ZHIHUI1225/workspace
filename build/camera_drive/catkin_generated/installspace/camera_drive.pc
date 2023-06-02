@@ -1,0 +1,8 @@
+prefix=/home/romi/workspace/install
+
+Name: camera_drive
+Description: Description of camera_drive
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: cv_bridge image_transport message_generation roscpp sensor_msgs std_msgs

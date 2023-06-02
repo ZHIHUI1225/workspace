@@ -1,0 +1,8 @@
+prefix=/home/romi/workspace/devel
+
+Name: agent_position
+Description: Description of agent_position
+Version: 0.0.0
+Cflags: -I/home/romi/workspace/src/agent_position/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime roscpp std_msgs

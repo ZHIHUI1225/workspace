@@ -1,0 +1,8 @@
+prefix=/home/romi/workspace/devel
+
+Name: co_transform
+Description: Description of co_transform
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
