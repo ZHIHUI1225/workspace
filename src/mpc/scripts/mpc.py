@@ -12,10 +12,12 @@ import cv2
 import math
 import casadi as ca
 import casadi.tools as ca_tools
+import time
 # import env
 # from draw import Draw_MPC_two_agents_withtube
 import matplotlib.pyplot as plt
 import csv
+from std_msgs.msg import Float64MultiArray
 #import Staticcontrol
 #import LOScontrol
 import time
@@ -26,6 +28,7 @@ from scipy.special import ellipe
 
 wheel_base = 80e-3  # mm
 wheel_diameter = 31e-3  # mm
+L=300e-3 #the length of tube
 
 class Point_tube:
     def __init__(self):
@@ -37,11 +40,11 @@ class Point_tube:
         for pose in msg.poses:
             self.feature_point.points.append(pose.position)
         if len(msg.poses)%2==1: # odd
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses)+1)/2)].x
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses)+1)/2)].y
+            self.middlepoint.x=self.feature_point.points[int((len(msg.poses)+1)/2)].x* 1.5037594e-3 #to m
+            self.middlepoint.y=self.feature_point.points[int((len(msg.poses)+1)/2)].y* 1.5306122e-3 
         else:
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y
+            self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x* 1.5037594e-3
+            self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.poses)
 
 
@@ -58,38 +61,61 @@ class QRrobot:
         self.flag=0
         for i in range(len(msg.robot_pose_array)):
             ID=int(msg.robot_pose_array[i].ID.data-10)
-            self.robotx[int(ID-1)]=msg.robot_pose_array[i].position.x
-            self.roboty[int(ID-1)]=msg.robot_pose_array[i].position.y
+            self.robotx[int(ID-1)]=msg.robot_pose_array[i].position.x* 1.5037594e-3
+            self.roboty[int(ID-1)]=msg.robot_pose_array[i].position.y* 1.5306122e-3 
             self.robotID[int(ID-1)]=msg.robot_pose_array[i].ID.data
             self.robotyaw[int(ID-1)]=msg.robot_pose_array[i].yaw
         self.flag=1
 # velocity to angular velocity
-def v2w(uLinear ,uAngular):
-    wl= (uLinear - uAngular * wheel_base / 2) * 2 / wheel_diameter
-    wr= (uLinear + uAngular * wheel_base / 2) * 2 / wheel_diameter
-    return [wl,wr]
+def v2w(u_sol,N):
+    w1=np.zeros((N,2))
+    w2=np.zeros((N,2))
+    w=np.zeros((N,4))
+    for i in range(N):
+        uLinear1=u_sol[i,0]
+        uAngular1=u_sol[i,1]
+        uLinear2=u_sol[i,2]
+        uAngular2=u_sol[i,3]
+        w1[i,0]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w1[i,1]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,0]= (uLinear2 - uAngular2 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,1]= (uLinear2 + uAngular2 * wheel_base / 2) * 2 / wheel_diameter       
+        w[i,:]=[w1[i,0],w1[i,1],w2[i,0],w2[i,1]]
+    return w
         
 if __name__ == '__main__':
     try:
         rospy.init_node('tf_listener_node')
+
+        # pub1 = rospy.Publisher('anglevelocity1', Twist, queue_size=10)
+        # pub2 = rospy.Publisher('anglevelocity2', Twist, queue_size=10)
+        # vel_msg1=Twist()
+        # vel_msg1.angular.x = 0 #wl
+        # vel_msg1.angular.y = 0 #wr
+        # vel_msg1.angular.z=0 #ID
+        # vel_msg2=Twist()
+        # vel_msg2.angular.x = 0
+        # vel_msg2.angular.y = 0
+        # vel_msg2.angular.z=0 #ID
+
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
+        vel = [0]*2
         Robot = QRrobot()
         feature=Point_tube()
-        rate = rospy.Rate(1.0)
-        T = 1# sampling time [s]
-        N = 10 # prediction horizon
-        rob_diam = 5 # [m]
-        L=30 #the length of tube
-        v_max = 1
-        omega_max = np.pi/6
 
+        T = 0.5# sampling time [s]
+        N = 10 # prediction horizon
+        un=3 # control step
+        v_max = 1e-3
+        omega_max = np.pi/6e-3
+        rate = rospy.Rate(10)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
         theta = ca.SX.sym('theta')
         statesq = ca.vertcat(x, y)
         states = ca.vertcat(statesq, theta)
         n_states = states.size()[0]
-
+        
         v = ca.SX.sym('v')
         omega = ca.SX.sym('omega')
         controls = ca.vertcat(v, omega)
@@ -161,12 +187,12 @@ if __name__ == '__main__':
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([150, 160]).reshape(-1, 1) # final state
+        xs = np.array([500e-3, 160e-3]).reshape(-1, 1) # final state
         x_c = [] # contains for the history of the state
         u_c = []
         # t_c = [t0] # for the time
         xx = []
-        un=3 # control step
+
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
@@ -183,10 +209,14 @@ if __name__ == '__main__':
                     x_c.append(ff_value)
                     u_c.append(np.array(u_sol.full()))
                     xx.append(x0.tolist())
-                    vel=v2w(np.array(u_sol.full()))
-                    vel_msg = Float64MultiArray(data=vel)
-                    rospy.loginfo(vel_msg)
-                    pub.publish(vel_msg)
+                    vel=v2w(np.array(u_sol.full()),un)
+                    for i in range(un):
+                        vel_msg = Float64MultiArray(data=vel[i,:])
+                        rospy.loginfo(vel_msg)
+                        pub.publish(vel_msg)
+                        d = rospy.Duration(T)
+                        rospy.sleep(d)
+
             rate.sleep()
 
     except rospy.ROSInterruptException:
