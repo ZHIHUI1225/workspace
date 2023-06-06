@@ -172,11 +172,11 @@ if __name__ == '__main__':
                     #calculate length
                     L=0
                     k=0
-                    # for i in range(1, len(sorted_line)):
-                    #     l = math.hypot(sorted_line[k].position.x - sorted_line[i].position.x, sorted_line[k].position.y - sorted_line[i].position.y)
-                    #     if l > 0.5:
-                    #         L=L+0.5
-                    #         k = i
+                    for i in range(1, len(sorted_line)):
+                        l = math.hypot(sorted_line[k].position.x - sorted_line[i].position.x, sorted_line[k].position.y - sorted_line[i].position.y)
+                        if l > 0.5:
+                            L=L+l
+                            k = i
 
                     k = 0
                     pc_10 = []
@@ -184,14 +184,15 @@ if __name__ == '__main__':
                     pc_10.append(sorted_line[0])
                     for i in range(1, len(sorted_line)):
                         l = math.hypot(sorted_line[k].position.x - sorted_line[i].position.x, sorted_line[k].position.y - sorted_line[i].position.y)
-                        if l > 2:
+                        if l > 1:
                             delta_l=delta_l+l
                             k = i
-                            if delta_l>25:
+                            if delta_l>L/2:
                                 # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
                                 pc_10.append(sorted_line[i])
                                 delta_l=0
-                            
+                                break
+                    pc_10.append(sorted_line[int(len(sorted_line)-1)])        
                             # center = (int(ipt[0]), int(ipt[1]))
                            
                     # print(pc_10)
@@ -201,6 +202,9 @@ if __name__ == '__main__':
                         center=(int(pose.position.x),int(pose.position.y))
                         if Frame.image is not None:
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
+                            xs = np.array([500, 160]).reshape(-1, 1) # final state
+                            center=(int(xs[0]),int(xs[1]))
+                            cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
                     if Frame.image is not None:
                         cv2.imshow("frame",Frame.image)
                         cv2.waitKey(1)

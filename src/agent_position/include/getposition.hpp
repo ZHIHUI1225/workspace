@@ -161,56 +161,7 @@ class Visualize //速度控制类
 		k3 = -0.1159959;
 		cv::Mat distCoeffs = (cv::Mat_<float>(5, 1) << k1, k2, p1, p2, k3);
 		std::vector<cv::Vec3d> rvecs, tvecs;
-	// 	cv::aruco::detectMarkers(frame, dictionary, markerCorners, markerIds);
-	// 	cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.05, cameraMatrix, distCoeffs, rvecs, tvecs);
-		
-	// //图像中标记
-	// 	robot_msg::robot_pose_array robot_array;
-	// 		if (markerIds.size() > 0) 
-	// 		{	robot_msg::robot_pose robot;
-	// 			// cv::aruco::drawDetectedMarkers(frame, markerCorners, markerIds);
-	// 			for (int i = 0; i < rvecs.size(); ++i) {
-	// 				//cv::aruco::drawAxis(frame, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
-	// 				robot.ID.data = markerIds[i];
-	// 				robot.position.x = (markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
-	// 				robot.position.y = (markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
-	// 				robot.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
-	// 				robot_array.robot_pose_array.push_back(robot);
-	// 			}
-	// 		}
-	// // cv::imshow("out",frame);
-	// // cv::waitKey(3);
-	// //cut to rectangle add mask
-	// Mat Mask_rect = Mat::zeros(frame.size(), CV_8UC1); //】】掩膜
-	// Point rect_center;
-	// Point rect_center_rl;
-	// double x0,y0,x1,y1,x3,y3;
-	// for (int i = 0; i < robot_array.robot_pose_array.size(); ++i)
-	// {
-	// 	if (robot_array.robot_pose_array[i].ID.data==0)
-	// 	{
-	// 		x0=cvRound(robot_array.robot_pose_array[i].position.x);
-	// 		y0=cvRound(robot_array.robot_pose_array[i].position.y);
-	// 		rect_center=Point(x0,y0);
-
-	// 	}
-	// 	if (robot_array.robot_pose_array[i].ID.data==3)
-	// 	{
-	// 		x3=cvRound(robot_array.robot_pose_array[i].position.x);
-	// 		y3=cvRound(robot_array.robot_pose_array[i].position.y);
-	// 		rect_center_rl=Point(x3,y3);
-
-	// 	}
-	// }
-	//Rect r1(x0,y0,x3-x0,y3-y0);
-	// //cout<<x3<<"x3andy3"<<y3<<endl;
-	// //Rect r1(100,100,200,400);
-	// Mask_rect(r1).setTo(255);
-	// Mat img2;
-	// frame.copyTo(img2,Mask_rect);
-	// //imshow("img2",img2);
-	// Mat frame_cut=frame(r1); // cuted figure
-	//imshow("cut",frame_cut);
+	
 	cv::Mat gray,thre;
 	cv::cvtColor(frame_cut, gray, cv::COLOR_BGR2GRAY);
 	// Mat out;

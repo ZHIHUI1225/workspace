@@ -23,12 +23,32 @@ from std_msgs.msg import Float64MultiArray
 import time
 from scipy.optimize import fsolve
 from scipy.special import ellipe
+from cv_bridge import CvBridge
+import cv2
 # from dlodynamics import dlodynamics
 # from Dynamicupdateplot import DynamicUpdate
 
 wheel_base = 80e-3  # mm
 wheel_diameter = 31e-3  # mm
 L=300e-3 #the length of tube
+
+
+# class frame_image():
+#     def __init__(self):
+#         # Params
+#         self.image=None
+#         self.br = CvBridge()
+#         # Node cycle rate (in Hz).
+#         self.loop_rate = rospy.Rate(1)
+#         # Subscribers
+#         rospy.Subscriber('/camera/image',Image,self.image_callback,queue_size=10)
+
+#     def image_callback(self, msg):
+#         # rospy.loginfo('Image received...')
+#         self.image = self.br.imgmsg_to_cv2(msg)
+#         # cv2.imshow("image_tf",self.image)
+#         # cv2.waitKey(3)
+
 
 class Point_tube:
     def __init__(self):
@@ -85,7 +105,7 @@ def v2w(u_sol,N):
         
 if __name__ == '__main__':
     try:
-        rospy.init_node('tf_listener_node')
+        rospy.init_node('mpc_mode')
 
         # pub1 = rospy.Publisher('anglevelocity1', Twist, queue_size=10)
         # pub2 = rospy.Publisher('anglevelocity2', Twist, queue_size=10)
@@ -102,12 +122,12 @@ if __name__ == '__main__':
         vel = [0]*2
         Robot = QRrobot()
         feature=Point_tube()
-
+        # Frame=frame_image()
         T = 0.5# sampling time [s]
         N = 10 # prediction horizon
         un=3 # control step
-        v_max = 1e-3
-        omega_max = np.pi/6e-3
+        v_max = 0.02
+        omega_max = 0.1
         rate = rospy.Rate(10)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
@@ -137,7 +157,8 @@ if __name__ == '__main__':
 
         ### define
         X[0,:] = P[:n_states*3-1] # initial condiction
-        J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
+        # J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
+        J=np.array([[-0.05992397,  0.62565856 , 0.58135642 , 0.1908652 ],[ 0.08207307 , 0.11548393 , 0.0025855  , 0.4072224 ]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])
@@ -150,7 +171,7 @@ if __name__ == '__main__':
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
         Q = np.eye(2)
-        R=0.01*np.eye(4)
+        R=0.00001*np.eye(4)
         #### cost function
         obj = 0 #### cost
         for i in range(N):
@@ -164,7 +185,10 @@ if __name__ == '__main__':
             for j in range(4):
                 g.append(X[i, j])
                 lbg.append(0)
-                ubg.append(200)
+                if j%2==1:
+                    ubg.append(400*1.5306122e-3 )
+                else:
+                    ubg.append(1000* 1.5037594e-3)
         for i in range(N):
             g.append(ca.norm_2(X[i,:2]-X[i,3:-3]))
             lbg.append(L/5)
@@ -187,7 +211,9 @@ if __name__ == '__main__':
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([500e-3, 160e-3]).reshape(-1, 1) # final state
+        xs = np.array([500* 1.5037594e-3, 160* 1.5306122e-3 ]).reshape(-1, 1) # final state
+        # center=(int(xs[0]),int(xs[1]))
+        # cv2.circle(Frame.image, center, 2, (255, 0, 255), -1)
         x_c = [] # contains for the history of the state
         u_c = []
         # t_c = [t0] # for the time

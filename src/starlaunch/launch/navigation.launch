@@ -1,11 +1,11 @@
 <launch>
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_1" output="screen" args="tcp 11411"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_2" output="screen" args="tcp 11412"/> 
-	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_3" output="screen" args="tcp 11413"/> 
+	<!-- <node pkg="rosserial_python" type="serial_node.py" name="serial_node_3" output="screen" args="tcp 11413"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_4" output="screen" args="tcp 11414"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_5" output="screen" args="tcp 11415"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_6" output="screen" args="tcp 11416"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_7" output="screen" args="tcp 11417"/> 
 	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_8" output="screen" args="tcp 11418"/> 
-	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_9" output="screen" args="tcp 11419"/> 
+	<node pkg="rosserial_python" type="serial_node.py" name="serial_node_9" output="screen" args="tcp 11419"/>  -->
 </launch>
