@@ -17,19 +17,71 @@ import math
 import casadi as ca
 import casadi.tools as ca_tools
 import time
-import env
+import csv
+from std_msgs.msg import Float64MultiArray
 import numpy as np
 from numpy import linalg as LA
-from draw import Draw_MPC_point_stabilization_v1
 import time
+import matplotlib.pyplot as plt
 #enviroment
 #  env
 # Plot=env.Plotting()
 # bounry_points=Plot.env.boun_point
 # obs_points=Plot.env.obs_point
 # obs_diagonal_point=Plot.env.obs_diagonal_point
-wheel_base = 80e-3  # mm
-wheel_diameter = 31e-3  # mm
+wheel_base = 80e-3  # m
+wheel_diameter = 31e-3  # m
+l_center=11* 1.5037594e-3
+plt.ion()
+class PlotUpdate():
+    #Suppose we know the x range
+    #min_x = 0
+    #max_x = 300
+
+    def __init__(self,N):
+        #Set up plot
+        #self.figure, self.ax = plt.subplots()
+        self.figure, (self.ax1, self.ax2) = plt.subplots(1, 2, sharey=True)
+        self.lines1=[]
+        self.lines2=[]
+        self.number=N
+        for i in range(self.number):
+            line, = self.ax1.plot([],[],label=str(i+1)) #error_x
+            self.lines1.append(line)
+            line, = self.ax2.plot([],[],label=str(i+1)) #error_x
+            self.lines2.append(line)
+        #self.lines1, = self.ax1.plot([],[]) #error_x
+        #self.lines2, = self.ax2.plot([],[]) #error_y
+        #Autoscale on unknown axis and known lims on the other
+        self.ax1.set_autoscaley_on(True)
+        #self.ax1.set_xlim(self.min_x, self.max_x)
+        self.ax2.set_autoscaley_on(True)
+        #self.ax2.set_xlim(self.min_x, self.max_x)
+        #Other stuff
+        self.ax1.grid()
+        self.ax2.grid()
+        self.ax1.legend(loc='upper left')
+        self.ax2.legend(loc='upper left')
+        ...
+
+    def on_running(self, error_x, error_y):
+        #Update data (with the new _and_ the old points)
+        for i in range(self.number):
+            xdata=np.arange(0,len(error_x))
+            self.lines1[i].set_xdata(xdata)
+            self.lines1[i].set_ydata(error_x)
+            ydata=np.arange(0,len(error_y))
+            self.lines2[i].set_xdata(ydata)
+            self.lines2[i].set_ydata(error_y)
+        #Need both of these in order to rescale
+        self.ax1.relim()
+        self.ax1.autoscale_view()
+        self.ax2.relim()
+        self.ax2.autoscale_view()
+        #We need to draw *and* flush
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+
 class QRrobot:
     def __init__(self,image=None,x=None,y=None,xmax=None,ymax=None):
         self.robotx=[0.0]*2
@@ -55,8 +107,8 @@ def v2w(u_sol,N):
     for i in range(N):
         uLinear1=u_sol[i,0]
         uAngular1=u_sol[i,1]
-        w[i,0]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
-        w[i,1]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w[i,0]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w[i,1]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
     return w
         
 
@@ -66,41 +118,39 @@ def sigmoid(x):
 def tanh(x):
     return 2 / (1 + ca.exp(-2*x))-1
 
-def shift_movement(T, t0, x0, u, f,un):
+def shift_movement(T, x0, u, f,un):
     for i in range(un):
         f_value = f(x0, u[i, :])
         x0 = x0 + T*f_value.T
-        t0 = t0 + T
-    state_next_=x0
-    t_ = t0
+    state_next_=np.array(x0.full())
     u_next_ = ca.vertcat(u[un:, :], u[-un:, :])
-    return t_, state_next_, u_next_
+    return state_next_, u_next_
 
-def getd(Q):
-    J=0
-    for i in range(0,len(obs_diagonal_point),2):
-        J0_norm=ca.dot(obs_diagonal_point[i]-Q.T,obs_diagonal_point[i+1]-Q.T)/ca.norm_2(obs_diagonal_point[i]-Q.T)/ca.norm_2(obs_diagonal_point[i+1]-Q.T)
-        #J0_norm=sigmoid(5/3*J0_norm+10/3)
-        #J0_norm=tanh(2/3.2*J0_norm+2-2/3.2*1.2)
-        J0_norm=tanh(3*J0_norm+3)
-        J=J+J0_norm
-    return J
-#get the coefficient of the derivative of  cos\theta 
-def getdOk(Q):
-    Q=Q.reshape((2,1))
-    K=0
-    for i in range(0,len(obs_diagonal_point),2):
-        P=np.array(obs_diagonal_point[i]).reshape((2,1))
-        l1=LA.norm(P-Q,2)
-        z1=(P-Q)/l1
-        P=np.array(obs_diagonal_point[i+1]).reshape((2,1))
-        l2=LA.norm(P-Q)
-        z2=(P-Q)/l2
-        O=np.dot(np.transpose(z1),z2)
-        K0=np.dot(np.concatenate((1/l1-O/l1,1/l1-O/l2),axis=1),np.concatenate((np.transpose(z1),np.transpose(z2)),axis=0))
-        K=K+LA.norm(K0,2)
+# def getd(Q):
+#     J=0
+#     for i in range(0,len(obs_diagonal_point),2):
+#         J0_norm=ca.dot(obs_diagonal_point[i]-Q.T,obs_diagonal_point[i+1]-Q.T)/ca.norm_2(obs_diagonal_point[i]-Q.T)/ca.norm_2(obs_diagonal_point[i+1]-Q.T)
+#         #J0_norm=sigmoid(5/3*J0_norm+10/3)
+#         #J0_norm=tanh(2/3.2*J0_norm+2-2/3.2*1.2)
+#         J0_norm=tanh(3*J0_norm+3)
+#         J=J+J0_norm
+#     return J
+# #get the coefficient of the derivative of  cos\theta 
+# def getdOk(Q):
+#     Q=Q.reshape((2,1))
+#     K=0
+#     for i in range(0,len(obs_diagonal_point),2):
+#         P=np.array(obs_diagonal_point[i]).reshape((2,1))
+#         l1=LA.norm(P-Q,2)
+#         z1=(P-Q)/l1
+#         P=np.array(obs_diagonal_point[i+1]).reshape((2,1))
+#         l2=LA.norm(P-Q)
+#         z2=(P-Q)/l2
+#         O=np.dot(np.transpose(z1),z2)
+#         K0=np.dot(np.concatenate((1/l1-O/l1,1/l1-O/l2),axis=1),np.concatenate((np.transpose(z1),np.transpose(z2)),axis=0))
+#         K=K+LA.norm(K0,2)
 
-    return K
+#     return K
 
 if __name__ == '__main__':
     try:
@@ -108,12 +158,14 @@ if __name__ == '__main__':
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
-        T = 0.5# sampling time [s]
-        N = 10 # prediction horizon
+        model_errorplot=PlotUpdate(1)
+        errorplot=PlotUpdate(1)
+        T = 0.1# sampling time [s]
+        N =20# prediction horizon
         un=3 # control step
-        v_max = 0.02
-        omega_max = 0.1
-        rate = rospy.Rate(10)
+        v_max = 0.03
+        omega_max =0.5
+        rate = rospy.Rate(1)
 
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
@@ -129,7 +181,7 @@ if __name__ == '__main__':
         n_controls = controls.size()[0]
 
         ## rhs
-        rhs = ca.horzcat(v*ca.cos(theta), v*ca.sin(theta))
+        rhs = ca.horzcat(v*ca.cos(theta)-l_center*ca.sin(theta)*omega, v*ca.sin(theta)+l_center*ca.cos(theta)*omega)
         rhs = ca.horzcat(rhs, omega)
         # ##calculate the Derivative of d
         # dd=0
@@ -166,29 +218,28 @@ if __name__ == '__main__':
             f_value = f(X[i, :], U[i, :])
             X[i+1, :] = X[i, :] + f_value*T
         # claculte D
-        for i in range(N+1):
-            D[i]=getd(X[i,:2])
+        # for i in range(N+1):
+        #     D[i]=getd(X[i,:2])
 
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
-        #Q = np.array([[1.0, 0.0],[0.0, 5.0]])
-        Q = np.array([[1.0, 0.0, 0.0],[0.0, 1.0, 0.0],[0.0, 0.0, 0.0]])
-        R = np.array([[0.05, 0.0], [0.0, 0.005]])
+        Q = np.array([[1.0, 0.0],[0.0, 1.0]])
+        # Q = np.array([[1.0, 0.0, 0.0],[0.0, 1.0, 0.0],[0.0, 0.0, 0.0]])
+        R = 0.0001*np.array([[0.01, 0.0], [0.0, 0.001]])
         g = [] # equal constrains
         # for i in range(N+1):
         #     g.append(X[i, 0])
         #     g.append(X[i, 1])
-
-        lbg = 0
-        ubg = 200
         lbx = []
         ubx = []
+        lbg=[]
+        ubg=[]
         for i in range(N+1):
             for j in range(2):
                 g.append(X[i, j])
                 lbg.append(0)
-                if j%2==1:
-                    ubg.append(400*1.5306122e-3 )
+                if j%2==0:
+                    ubg.append(380*1.5306122e-3 )
                 else:
                     ubg.append(1000* 1.5037594e-3)
         for _ in range(N):
@@ -201,24 +252,32 @@ if __name__ == '__main__':
 
         # Simulation
         t0 = 0.0
-        x0 = np.array([10.0, 10.0,-np.pi/2]).reshape(-1, 1)# initial state
-        xs = np.array([170, 160,-np.pi/2]).reshape(-1, 1) # final state
-        u0 = np.array([1,0]*N).reshape(-1, 2)# np.ones((N, 2)) # controls
+        xs = np.array([990* 1.5037594e-3, 300* 1.5306122e-3 ,-np.pi/2]).reshape(-1, 1) # final state
+        u0 = np.array([0,0]*N).reshape(-1, 2)# np.ones((N, 2)) # controls
         x_c = [] # contains for the history of the state
         u_c = []
-        t_c = [t0] # for the time
         xx = []
-        sim_time = 100
-        un=4 # control step
         ## start MPC
         mpciter = 0
         start_time = time.time()
-        index_t = []
+        x_next=None
+        model_error_x=[]
+        model_error_y=[]
+        error_x=[]
+        error_y=[]
         while not rospy.is_shutdown():
-            if Robot.flag==1 and feature.middlepoint.x!=0:
-                x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                if np.linalg.norm(x0-xs)>1:
+            if Robot.flag==1:
+                x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0]]).reshape(-1, 1)# initial state
+                if x_next is not None:
+                    model_error_x.append(x_next[0][0]-x0[0][0])
+                    model_error_y.append(x_next[2][0]-x0[2][0])
+                    model_errorplot.on_running(model_error_x,model_error_y)
+                if np.linalg.norm(x0[:2]-xs[:2])>0.015:
                     ## set parameter
+                    error_x.append(x0[0][0]-xs[0][0])
+                    error_y.append(x0[1][0]-xs[1][0])
+                    errorplot.on_running(error_x,error_x)
+                    print(np.linalg.norm(x0[:2]-xs[:2]))
                     c_p = np.concatenate((x0, xs))
                     init_control = ca.reshape(u0, -1, 1)
                     t_ = time.time()
@@ -231,21 +290,28 @@ if __name__ == '__main__':
                     nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                     solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
-                    
                     res = solver(x0=init_control, p=c_p, lbg=lbg, lbx=lbx, ubg=ubg, ubx=ubx)
                     u_sol = ca.reshape(res['x'],  N, n_controls) # one can only have this shape of the output
-                    x_c.append(ff_value)
+                    # x_c.append(ff_value)
+                    # u0 = ca.vertcat(u_sol[un:, :], u_sol[-un:, :])
+                    x_next, u0 = shift_movement(T, x0, u_sol, f,un)
                     u_c.append(np.array(u_sol.full()))
                     xx.append(x0.tolist())
                     vel=v2w(np.array(u_sol.full()),un)
-                    for i in range(un):
-                        vel_msg = Float64MultiArray(data=vel[i,:])
+                    for j in range(un):
+                        vel_msg = Float64MultiArray(data=vel[j,:])
                         rospy.loginfo(vel_msg)
                         pub.publish(vel_msg)
                         d = rospy.Duration(T)
                         rospy.sleep(d)
-                rate.sleep()
-
+                    ran_vel=np.zeros((1,2))
+                    vel_msg = Float64MultiArray(data=ran_vel[0])
+                    rospy.loginfo(vel_msg)
+                    pub.publish(vel_msg)
+                    d = rospy.Duration(0.1)
+                    rospy.sleep(d)
+                # rate.sleep()
+            # errorplot.figure.show()
     except rospy.ROSInterruptException:
         pass
 

@@ -55,6 +55,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/romi/workspace/src/learning_tf/package.xml"
   "/home/romi/workspace/src/mpc/CMakeLists.txt"
   "/home/romi/workspace/src/mpc/package.xml"
+  "/home/romi/workspace/src/mpc/scripts/Dynamicupdateplot.py"
   "/home/romi/workspace/src/mpc/scripts/Jmatrix.py"
   "/home/romi/workspace/src/mpc/scripts/mpc.py"
   "/home/romi/workspace/src/mpc/scripts/mpc_single.py"

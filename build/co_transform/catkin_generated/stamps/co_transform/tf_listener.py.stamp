@@ -187,7 +187,7 @@ if __name__ == '__main__':
                         if l > 1:
                             delta_l=delta_l+l
                             k = i
-                            if delta_l>L/2:
+                            if delta_l>L/2-1:
                                 # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
                                 pc_10.append(sorted_line[i])
                                 delta_l=0
@@ -202,7 +202,7 @@ if __name__ == '__main__':
                         center=(int(pose.position.x),int(pose.position.y))
                         if Frame.image is not None:
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
-                            xs = np.array([500, 160]).reshape(-1, 1) # final state
+                            xs = np.array([990, 300]).reshape(-1, 1) # final state
                             center=(int(xs[0]),int(xs[1]))
                             cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
                     if Frame.image is not None:

@@ -211,7 +211,7 @@ if __name__ == '__main__':
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([500* 1.5037594e-3, 160* 1.5306122e-3 ]).reshape(-1, 1) # final state
+        xs = np.array([500* 1.5037594e-3, 300* 1.5306122e-3 ]).reshape(-1, 1) # final state
         # center=(int(xs[0]),int(xs[1]))
         # cv2.circle(Frame.image, center, 2, (255, 0, 255), -1)
         x_c = [] # contains for the history of the state

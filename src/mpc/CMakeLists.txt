@@ -103,7 +103,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
 #  LIBRARIES mpc
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
@@ -163,6 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/mpc.py
   scripts/Jmatrix.py
   scripts/mpc_single.py
+  scripts/Dynamicupdateplot.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
