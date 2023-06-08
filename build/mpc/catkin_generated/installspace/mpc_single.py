@@ -239,9 +239,9 @@ if __name__ == '__main__':
                 g.append(X[i, j])
                 lbg.append(0)
                 if j%2==0:
-                    ubg.append(380*1.5306122e-3 )
+                    ubg.append(1000*1.5306122e-3 )
                 else:
-                    ubg.append(1000* 1.5037594e-3)
+                    ubg.append(400* 1.5037594e-3)
         for _ in range(N):
             lbx.append(0)
             ubx.append(v_max)
@@ -252,7 +252,7 @@ if __name__ == '__main__':
 
         # Simulation
         t0 = 0.0
-        xs = np.array([990* 1.5037594e-3, 300* 1.5306122e-3 ,-np.pi/2]).reshape(-1, 1) # final state
+        xs = np.array([190* 1.5037594e-3, 200* 1.5306122e-3 ,-np.pi/2]).reshape(-1, 1) # final state
         u0 = np.array([0,0]*N).reshape(-1, 2)# np.ones((N, 2)) # controls
         x_c = [] # contains for the history of the state
         u_c = []

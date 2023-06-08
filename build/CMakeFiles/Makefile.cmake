@@ -59,6 +59,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/romi/workspace/src/mpc/scripts/Jmatrix.py"
   "/home/romi/workspace/src/mpc/scripts/mpc.py"
   "/home/romi/workspace/src/mpc/scripts/mpc_single.py"
+  "/home/romi/workspace/src/mpc/scripts/mpc_two.py"
   "/home/romi/workspace/src/robot_mag/CMakeLists.txt"
   "/home/romi/workspace/src/robot_mag/package.xml"
   "/home/romi/workspace/src/starlaunch/CMakeLists.txt"

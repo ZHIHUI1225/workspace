@@ -22,7 +22,7 @@ from sklearn.linear_model import LinearRegression
 
 wheel_base = 80e-3  # mm
 wheel_diameter = 31e-3  # mm
-L=300e-3 #the length of tube
+L=280e-3 #the length of tube
 
 class Point_tube:
     def __init__(self):
@@ -70,10 +70,10 @@ def v2w(u_sol,N):
         uAngular1=u_sol[i,1]
         uLinear2=u_sol[i,2]
         uAngular2=u_sol[i,3]
-        w1[i,0]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
-        w1[i,1]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
-        w2[i,0]= (uLinear2 - uAngular2 * wheel_base / 2) * 2 / wheel_diameter
-        w2[i,1]= (uLinear2 + uAngular2 * wheel_base / 2) * 2 / wheel_diameter       
+        w1[i,0]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w1[i,1]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,0]= (uLinear2 + uAngular2 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,1]= (uLinear2 - uAngular2 * wheel_base / 2) * 2 / wheel_diameter       
         w[i,:]=[w1[i,0],w1[i,1],w2[i,0],w2[i,1]]
     return w
 
@@ -95,12 +95,18 @@ if __name__ == '__main__':
             if i <T_num and Robot.flag==1 and feature.middlepoint is not None:
                 #random move
                 # ran_vel=0.4*np.random.uniform(-1, 1, size=(1, 4))
-                u_sol=np.array([[0.02*random.random(),0.1*random.uniform(-1, 1),0.02*random.random(),0.1*random.uniform(-1, 1)]])
+                u_sol=np.array([[0.03*random.random(),0.5*random.uniform(-1, 1),0.03*random.random(),0.5*random.uniform(-1, 1)]])
                 ran_vel=v2w(u_sol,1)
                 vel_msg = Float64MultiArray(data=ran_vel[0])
                 rospy.loginfo(vel_msg)
                 pub.publish(vel_msg)
-                d = rospy.Duration(0.5)
+                d = rospy.Duration(0.3)
+                rospy.sleep(d)
+                ran_vel=np.zeros((1,4))
+                vel_msg = Float64MultiArray(data=ran_vel[0])
+                rospy.loginfo(vel_msg)
+                pub.publish(vel_msg)
+                d = rospy.Duration(0.2)
                 rospy.sleep(d)
                 p_new=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]]
                 tp_new=[feature.middlepoint.x,feature.middlepoint.y]
@@ -120,7 +126,7 @@ if __name__ == '__main__':
                     vel_msg = Float64MultiArray(data=ran_vel[0])
                     rospy.loginfo(vel_msg)
                     pub.publish(vel_msg)
-                    d = rospy.Duration(0.5)
+                    d = rospy.Duration(0.2)
                     rospy.sleep(d)
         rate.sleep()
     except rospy.ROSInterruptException:

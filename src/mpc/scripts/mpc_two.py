@@ -31,7 +31,7 @@ import cv2
 wheel_base = 80e-3  # m
 wheel_diameter = 31e-3  # m
 l_center=11* 1.5037594e-3
-L=200* 1.5037594e-3 #the length of tube
+L=219*1.5037594e-3 #the length of tube
 
 
 class Point_tube:
@@ -91,8 +91,8 @@ def shift_movement(T, x0, u, f,un,J):
     for i in range(un):
         f_value1 = f(x0[:3], u[i, :2])
         x0[:3]= x0[:3] + T*f_value1.T
-        f_value2= f(x0[3:6], u[i, 2:])
-        x0[3:6]= x0[3:6] + T*f_value2.T
+        f_value2= f(x0[3:-2], u[i, 2:])
+        x0[3:-2]= x0[3:-2] + T*f_value2.T
         x0[-2:]=x0[-2:]+ca.mtimes(J,ca.vertcat(T*f_value1[:2].T,T*f_value2[:2].T))
     state_next_=x0
     u_next_ = ca.vertcat(u[un:, :], u[-un:, :])
@@ -108,9 +108,9 @@ if __name__ == '__main__':
         feature=Point_tube()
         # Frame=frame_image()
         T = 0.1# sampling time [s]
-        N = 30 # prediction horizon
-        un= 3 # control step
-        v_max = 0.02
+        N = 20 # prediction horizon
+        un=3 # control step
+        v_max = 0.03
         omega_max = 0.5
         rate = rospy.Rate(1)
         x = ca.SX.sym('x')
@@ -136,13 +136,13 @@ if __name__ == '__main__':
 
         X = ca.SX.sym('X', (N+1), n_states*3-1) # x1,y1,theta1,x2,y1,thate2,xs,ys
 
-        P = ca.SX.sym('P', n_states*3-1+2)#initial states +target states 2 of s
+        P = ca.SX.sym('P', n_states*3-1+4)#initial states +target states 2 of s
 
 
         ### define
         X[0,:] = P[:n_states*3-1] # initial condiction
-        #J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
-        J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
+        J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
+        # J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])
@@ -161,24 +161,24 @@ if __name__ == '__main__':
         for i in range(N):
             #without angle error
             #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
-            obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
+            obj = obj + ca.mtimes([X[i,:2]-P[8:10].T, Q, (X[i, :2]-P[8:10].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([X[i, 3:5]-P[10:12].T, Q, (X[i, 3:5]-P[10:12].T).T])
         g = [] # equal constrains
         lbg = []
         ubg = []
         for i in range(N+1):
-            for j in range(8):
+            for j in range(6):
                 if j%3==0:
                     g.append(X[i, j])
-                    lbg.append(30*1.5306122e-3)
+                    lbg.append(0)
                     ubg.append(1000*1.5306122e-3 )
                 if j%3==1:
                     g.append(X[i, j])
-                    lbg.append(30* 1.5037594e-3)
+                    lbg.append(0)
                     ubg.append(400* 1.5037594e-3)
         for i in range(N):
             g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
-            lbg.append(L*0.45)
-            ubg.append(L*0.7)
+            lbg.append(L*0.4)
+            ubg.append(L*0.9)
 
         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -197,7 +197,7 @@ if __name__ == '__main__':
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([400* 1.5037594e-3, 200* 1.5306122e-3 ]).reshape(-1, 1) # final state
+        xs = np.array([500* 1.5037594e-3, 200* 1.5306122e-3,500* 1.5037594e-3+0.5*L, 200* 1.5306122e-3]).reshape(-1, 1) # final state
         # center=(int(xs[0]),int(xs[1]))
         # cv2.circle(Frame.image, center, 2, (255, 0, 255), -1)
         x_c = [] # contains for the history of the state
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
                 x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                if np.linalg.norm(x0[-2:]-xs)>1e-3 :
+                if np.linalg.norm(np.array([x0[0][0],x0[1][0],x0[3][0],x0[4][0]])-xs)>1 :
                     ## set parameter
                     c_p = np.concatenate((x0, xs))
                     init_control = ca.reshape(u0, -1, 1)

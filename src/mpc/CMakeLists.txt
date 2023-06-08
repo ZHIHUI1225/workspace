@@ -162,6 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/mpc.py
   scripts/Jmatrix.py
   scripts/mpc_single.py
+  scripts/mpc_two.py
   scripts/Dynamicupdateplot.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

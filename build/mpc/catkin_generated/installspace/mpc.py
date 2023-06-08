@@ -28,26 +28,10 @@ import cv2
 # from dlodynamics import dlodynamics
 # from Dynamicupdateplot import DynamicUpdate
 
-wheel_base = 80e-3  # mm
-wheel_diameter = 31e-3  # mm
-L=300e-3 #the length of tube
-
-
-# class frame_image():
-#     def __init__(self):
-#         # Params
-#         self.image=None
-#         self.br = CvBridge()
-#         # Node cycle rate (in Hz).
-#         self.loop_rate = rospy.Rate(1)
-#         # Subscribers
-#         rospy.Subscriber('/camera/image',Image,self.image_callback,queue_size=10)
-
-#     def image_callback(self, msg):
-#         # rospy.loginfo('Image received...')
-#         self.image = self.br.imgmsg_to_cv2(msg)
-#         # cv2.imshow("image_tf",self.image)
-#         # cv2.waitKey(3)
+wheel_base = 80e-3  # m
+wheel_diameter = 31e-3  # m
+l_center=11* 1.5037594e-3
+L=219** 1.5037594e-3 #the length of tube
 
 
 class Point_tube:
@@ -96,39 +80,39 @@ def v2w(u_sol,N):
         uAngular1=u_sol[i,1]
         uLinear2=u_sol[i,2]
         uAngular2=u_sol[i,3]
-        w1[i,0]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
-        w1[i,1]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
-        w2[i,0]= (uLinear2 - uAngular2 * wheel_base / 2) * 2 / wheel_diameter
-        w2[i,1]= (uLinear2 + uAngular2 * wheel_base / 2) * 2 / wheel_diameter       
+        w1[i,0]= (uLinear1 + uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w1[i,1]= (uLinear1 - uAngular1 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,0]= (uLinear2 + uAngular2 * wheel_base / 2) * 2 / wheel_diameter
+        w2[i,1]= (uLinear2 - uAngular2 * wheel_base / 2) * 2 / wheel_diameter       
         w[i,:]=[w1[i,0],w1[i,1],w2[i,0],w2[i,1]]
     return w
-        
+
+def shift_movement(T, x0, u, f,un,J):
+    for i in range(un):
+        f_value1 = f(x0[:3], u[i, :2])
+        x0[:3]= x0[:3] + T*f_value1.T
+        f_value2= f(x0[3:-2], u[i, 2:])
+        x0[3:-2]= x0[3:-2] + T*f_value2.T
+        x0[-2:]=x0[-2:]+ca.mtimes(J,ca.vertcat(T*f_value1[:2].T,T*f_value2[:2].T))
+    state_next_=x0
+    u_next_ = ca.vertcat(u[un:, :], u[-un:, :])
+    return state_next_, u_next_
+
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
-
-        # pub1 = rospy.Publisher('anglevelocity1', Twist, queue_size=10)
-        # pub2 = rospy.Publisher('anglevelocity2', Twist, queue_size=10)
-        # vel_msg1=Twist()
-        # vel_msg1.angular.x = 0 #wl
-        # vel_msg1.angular.y = 0 #wr
-        # vel_msg1.angular.z=0 #ID
-        # vel_msg2=Twist()
-        # vel_msg2.angular.x = 0
-        # vel_msg2.angular.y = 0
-        # vel_msg2.angular.z=0 #ID
 
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
         feature=Point_tube()
         # Frame=frame_image()
-        T = 0.5# sampling time [s]
-        N = 10 # prediction horizon
+        T = 0.1# sampling time [s]
+        N = 20 # prediction horizon
         un=3 # control step
-        v_max = 0.02
-        omega_max = 0.1
-        rate = rospy.Rate(10)
+        v_max = 0.03
+        omega_max = 0.5
+        rate = rospy.Rate(1)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
         theta = ca.SX.sym('theta')
@@ -142,7 +126,7 @@ if __name__ == '__main__':
         n_controls = controls.size()[0]
 
         ## rhs
-        rhs = ca.horzcat(v*ca.cos(theta), v*ca.sin(theta))
+        rhs = ca.horzcat(v*ca.cos(theta)-l_center*ca.sin(theta)*omega, v*ca.sin(theta)+l_center*ca.cos(theta)*omega)
         rhs = ca.horzcat(rhs, omega)
         ## function
         f = ca.Function('f', [states, controls], [rhs], ['input_state', 'control_input'], ['rhs'])
@@ -158,7 +142,7 @@ if __name__ == '__main__':
         ### define
         X[0,:] = P[:n_states*3-1] # initial condiction
         # J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
-        J=np.array([[-0.05992397,  0.62565856 , 0.58135642 , 0.1908652 ],[ 0.08207307 , 0.11548393 , 0.0025855  , 0.4072224 ]])
+        J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])
@@ -182,17 +166,19 @@ if __name__ == '__main__':
         lbg = []
         ubg = []
         for i in range(N+1):
-            for j in range(4):
-                g.append(X[i, j])
-                lbg.append(0)
-                if j%2==1:
-                    ubg.append(400*1.5306122e-3 )
-                else:
-                    ubg.append(1000* 1.5037594e-3)
+            for j in range(6):
+                if j%3==0:
+                    g.append(X[i, j])
+                    lbg.append(0)
+                    ubg.append(1000*1.5306122e-3 )
+                if j%3==1:
+                    g.append(X[i, j])
+                    lbg.append(0)
+                    ubg.append(400* 1.5037594e-3)
         for i in range(N):
-            g.append(ca.norm_2(X[i,:2]-X[i,3:-3]))
-            lbg.append(L/5)
-            ubg.append(L)
+            g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
+            lbg.append(L*0.4)
+            ubg.append(L*0.9)
 
         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -211,7 +197,7 @@ if __name__ == '__main__':
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([500* 1.5037594e-3, 300* 1.5306122e-3 ]).reshape(-1, 1) # final state
+        xs = np.array([500* 1.5037594e-3, 200* 1.5306122e-3 ]).reshape(-1, 1) # final state
         # center=(int(xs[0]),int(xs[1]))
         # cv2.circle(Frame.image, center, 2, (255, 0, 255), -1)
         x_c = [] # contains for the history of the state
@@ -231,8 +217,9 @@ if __name__ == '__main__':
                     res = solver(x0=init_control, p=c_p, lbg=lbg, lbx=lbx, ubg=ubg, ubx=ubx)
                     # index_t.append(time.time()- t_)
                     u_sol = ca.reshape(res['x'],  N, n_controls*2) # one can only have this shape of the output
-                    ff_value = ff(u_sol, c_p) # [n_states, N]
-                    x_c.append(ff_value)
+                    # ff_value = ff(u_sol, c_p) # [n_states, N]
+                    x_next, u0 = shift_movement(T, x0, u_sol, f,un,J)
+                    # x_c.append(ff_value)
                     u_c.append(np.array(u_sol.full()))
                     xx.append(x0.tolist())
                     vel=v2w(np.array(u_sol.full()),un)
@@ -242,8 +229,12 @@ if __name__ == '__main__':
                         pub.publish(vel_msg)
                         d = rospy.Duration(T)
                         rospy.sleep(d)
-
-            rate.sleep()
+                    ran_vel=np.zeros((1,2))
+                    vel_msg = Float64MultiArray(data=ran_vel[0])
+                    rospy.loginfo(vel_msg)
+                    pub.publish(vel_msg)
+                    d = rospy.Duration(0.1)
+                    rospy.sleep(d)
 
     except rospy.ROSInterruptException:
         pass

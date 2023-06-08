@@ -202,7 +202,7 @@ if __name__ == '__main__':
                         center=(int(pose.position.x),int(pose.position.y))
                         if Frame.image is not None:
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
-                            xs = np.array([190, 200]).reshape(-1, 1) # final state
+                            xs = np.array([400, 200]).reshape(-1, 1) # final state
                             center=(int(xs[0]),int(xs[1]))
                             cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
                     if Frame.image is not None:
