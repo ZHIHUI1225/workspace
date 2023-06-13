@@ -33,7 +33,7 @@ wheel_diameter = 31e-3  # m
 l_center=11* 1.5037594e-3
 L=200* 1.5037594e-3 #the length of tube
 
-
+ 
 class Point_tube:
     def __init__(self):
         self.feature_point=PointCloud()
@@ -54,10 +54,10 @@ class Point_tube:
 
 class QRrobot:
     def __init__(self,image=None,x=None,y=None,xmax=None,ymax=None):
-        self.robotx=[0.0]*2
-        self.roboty=[0.0]*2
-        self.robotyaw=[0.0]*2
-        self.robotID=[0]*2
+        self.robotx=[0.0]*3
+        self.roboty=[0.0]*3
+        self.robotyaw=[0.0]*3
+        self.robotID=[0]*3
         self.flag=0
         self.sub = rospy.Subscriber('/robot', robot_pose_array, self.pose_callback,queue_size=10)
     def pose_callback(self, msg): # feedback means actual value.
@@ -142,7 +142,7 @@ if __name__ == '__main__':
         ### define
         X[0,:] = P[:n_states*3-1] # initial condiction
         #J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
-        J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
+        J=np.array([[ 0.55005853 ,-0.16330791 , 0.49016718,  0.86449824],[-0.21490211  ,0.35151663  ,0.25541339 , 0.64292708]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])
@@ -208,8 +208,9 @@ if __name__ == '__main__':
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
-                x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                if np.linalg.norm(x0[-2:]-xs)>1e-3 :
+                # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
+                x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
+                if np.linalg.norm(x0[-2:]-xs)>5e-3 :
                     ## set parameter
                     c_p = np.concatenate((x0, xs))
                     init_control = ca.reshape(u0, -1, 1)

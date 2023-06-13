@@ -43,11 +43,11 @@ class Point_tube:
 
 
 class QRrobot:
-    def __init__(self,image=None,x=None,y=None,xmax=None,ymax=None):
-        self.robotx=[0.0]*2
-        self.roboty=[0.0]*2
-        self.robotyaw=[0.0]*2
-        self.robotID=[0]*2
+    def __init__(self,N):
+        self.robotx=[0.0]*N
+        self.roboty=[0.0]*N
+        self.robotyaw=[0.0]*N
+        self.robotID=[0]*N
         self.flag=0
         self.sub = rospy.Subscriber('/robot', robot_pose_array, self.pose_callback,queue_size=10)
     def pose_callback(self, msg): # feedback means actual value.
@@ -80,22 +80,27 @@ def v2w(u_sol,N):
 if __name__ == '__main__':
     try:
         rospy.init_node('Jmatrix_update')
-        Robot = QRrobot()
+        N=5
+        Robot = QRrobot(N)
         feature=Point_tube()
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(5)
         p=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]] #position of robot
-        tp=[feature.middlepoint.x,feature.middlepoint.y]
+        # tp=[feature.middlepoint.x,feature.middlepoint.y]
+        tp=[]
+        for i in range(2,N,1):
+            tp.append(Robot.robotx[i])
+            tp.append(Robot.roboty[i])
         x=[]
         y=[]
         i=0
-        T_num=50
+        T_num=70
         while not rospy.is_shutdown():
             if i <T_num and Robot.flag==1 and feature.middlepoint is not None:
                 #random move
                 # ran_vel=0.4*np.random.uniform(-1, 1, size=(1, 4))
-                u_sol=np.array([[0.03*random.random(),0.5*random.uniform(-1, 1),0.03*random.random(),0.5*random.uniform(-1, 1)]])
+                u_sol=np.array([[0.02*random.random(),0.5*random.uniform(-1, 1),0.02*random.random(),0.5*random.uniform(-1, 1)]])
                 ran_vel=v2w(u_sol,1)
                 vel_msg = Float64MultiArray(data=ran_vel[0])
                 rospy.loginfo(vel_msg)
@@ -109,10 +114,14 @@ if __name__ == '__main__':
                 d = rospy.Duration(0.2)
                 rospy.sleep(d)
                 p_new=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]]
-                tp_new=[feature.middlepoint.x,feature.middlepoint.y]
+                # tp_new=[feature.middlepoint.x,feature.middlepoint.y]
+                tp_new=[]
+                for j in range(2,N,1):
+                    tp_new.append(Robot.robotx[j])
+                    tp_new.append(Robot.roboty[j])
                 deltax=np.array(p_new)-np.array(p)
                 deltay=np.array(tp_new)-np.array(tp)
-                y.append(np.reshape(deltay,(1,2))[0])
+                y.append(np.reshape(deltay,(1,2*(N-2)))[0])
                 x.append(deltax)
                 p=p_new
                 tp=tp_new
@@ -126,7 +135,7 @@ if __name__ == '__main__':
                     vel_msg = Float64MultiArray(data=ran_vel[0])
                     rospy.loginfo(vel_msg)
                     pub.publish(vel_msg)
-                    d = rospy.Duration(0.2)
+                    d = rospy.Duration(0.3)
                     rospy.sleep(d)
         rate.sleep()
     except rospy.ROSInterruptException:

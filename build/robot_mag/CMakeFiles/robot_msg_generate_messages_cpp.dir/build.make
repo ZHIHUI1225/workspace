@@ -61,17 +61,17 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_cpp: /home/romi/workspace/devel
 
 /home/romi/workspace/devel/include/robot_msg/robot_pose.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/romi/workspace/devel/include/robot_msg/robot_pose.h: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
-/home/romi/workspace/devel/include/robot_msg/robot_pose.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose.h: /opt/ros/noetic/share/std_msgs/msg/Int8.msg
+/home/romi/workspace/devel/include/robot_msg/robot_pose.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating C++ code from robot_msg/robot_pose.msg"
 	cd /home/romi/workspace/src/robot_mag && /home/romi/workspace/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/romi/workspace/src/robot_mag/msg/robot_pose.msg -Irobot_msg:/home/romi/workspace/src/robot_mag/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p robot_msg -o /home/romi/workspace/devel/include/robot_msg -e /opt/ros/noetic/share/gencpp/cmake/..
 
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg
-/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
-/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/std_msgs/msg/Int8.msg
+/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
+/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating C++ code from robot_msg/robot_pose_array.msg"
 	cd /home/romi/workspace/src/robot_mag && /home/romi/workspace/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg -Irobot_msg:/home/romi/workspace/src/robot_mag/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p robot_msg -o /home/romi/workspace/devel/include/robot_msg -e /opt/ros/noetic/share/gencpp/cmake/..
@@ -85,8 +85,8 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_cpp: /home/romi/workspace/devel
 
 /home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /home/romi/workspace/src/robot_mag/msg/target_pose_array.msg
-/home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /home/romi/workspace/src/robot_mag/msg/target_pose.msg
+/home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/target_pose_array.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating C++ code from robot_msg/target_pose_array.msg"
 	cd /home/romi/workspace/src/robot_mag && /home/romi/workspace/build/catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/gencpp/cmake/../../../lib/gencpp/gen_cpp.py /home/romi/workspace/src/robot_mag/msg/target_pose_array.msg -Irobot_msg:/home/romi/workspace/src/robot_mag/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p robot_msg -o /home/romi/workspace/devel/include/robot_msg -e /opt/ros/noetic/share/gencpp/cmake/..

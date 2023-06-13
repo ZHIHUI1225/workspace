@@ -188,7 +188,7 @@ class Visualize //速度控制类
 				robot_new.position.x = (markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
 				robot_new.position.y = (markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
 				robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
-				if (markerIds[i]>3){
+				if (markerIds[i]>3 && markerIds[i]<13){
 					//读取圆心
 					deltax=20+(44-robot_new.position.x)/25.65;
 					deltay=7+(32-robot_new.position.y)/29.71;
@@ -294,8 +294,8 @@ class Visualize //速度控制类
         {
             for (int row = 0; row < h; row++)
             {
-                // if (connect.at<Vec3b>(row, col) == color)  
-				if (skel.at<uchar>(row, col) == 255) 
+                if (connect.at<Vec3b>(row, col) == color)  
+				// if (skel.at<uchar>(row, col) == 255) 
                 {
 					geometry_msgs::Point32 p;
                     points.push_back(cv::Point(col, row));

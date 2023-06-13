@@ -4,7 +4,9 @@
 	<node pkg="learning_tf" type="tf_broadcaster" name="tf_broadcaster" />
 	<node pkg="co_transform" type="tf_listener.py" name="tf_listener" output="screen"/>
 	<!-- <node pkg="mpc" type="mpc_single.py" name="mpc_single" output="screen"/>  -->
-	<node pkg="mpc" type="mpc.py" name="mpc" output="screen"/> 
+	<!-- <node pkg="mpc" type="mpc.py" name="mpc" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="Jmatrix.py" name="Jmatrix" output="screen"/> -->
 	<!-- <node pkg="mpc" type="mpc_two.py" name="mpc_two" output="screen"/>  -->
+	<!-- <node pkg="mpc" type="Jmatrix_Bezier.py" name="Jmatrix_Bezier" output="screen"/>  -->
+	<node pkg="mpc" type="mpc_Bezier.py" name="mpc_Bezier" output="screen"/> 
 </launch> 

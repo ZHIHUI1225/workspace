@@ -34,23 +34,6 @@ l_center=11* 1.5037594e-3
 L=219*1.5037594e-3 #the length of tube
 
 
-# class frame_image():
-#     def __init__(self):
-#         # Params
-#         self.image=None
-#         self.br = CvBridge()
-#         # Node cycle rate (in Hz).
-#         self.loop_rate = rospy.Rate(1)
-#         # Subscribers
-#         rospy.Subscriber('/camera/image',Image,self.image_callback,queue_size=10)
-
-#     def image_callback(self, msg):
-#         # rospy.loginfo('Image received...')
-#         self.image = self.br.imgmsg_to_cv2(msg)
-#         # cv2.imshow("image_tf",self.image)
-#         # cv2.waitKey(3)
-
-
 class Point_tube:
     def __init__(self):
         self.feature_point=PointCloud()
@@ -119,17 +102,6 @@ if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
 
-        # pub1 = rospy.Publisher('anglevelocity1', Twist, queue_size=10)
-        # pub2 = rospy.Publisher('anglevelocity2', Twist, queue_size=10)
-        # vel_msg1=Twist()
-        # vel_msg1.angular.x = 0 #wl
-        # vel_msg1.angular.y = 0 #wr
-        # vel_msg1.angular.z=0 #ID
-        # vel_msg2=Twist()
-        # vel_msg2.angular.x = 0
-        # vel_msg2.angular.y = 0
-        # vel_msg2.angular.z=0 #ID
-
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
@@ -169,8 +141,8 @@ if __name__ == '__main__':
 
         ### define
         X[0,:] = P[:n_states*3-1] # initial condiction
-        # J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
-        J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
+        J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
+        # J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])

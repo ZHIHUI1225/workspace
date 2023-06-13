@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/romi/workspace/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/romi/workspace/src/agent_position/include/**",
+        "/home/romi/workspace/src/beginner_tutorials/include/**",
+        "/home/romi/workspace/src/camera_drive/include/**",
+        "/home/romi/workspace/src/co_transform/include/**",
+        "/home/romi/workspace/src/learning_tf/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
