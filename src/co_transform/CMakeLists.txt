@@ -121,6 +121,9 @@ include_directories(
 )
 catkin_install_python(PROGRAMS
    scripts/tf_listener.py
+   scripts/tf_listener_color.py
+   scripts/Kalman_filter.py
+   scripts/low_pass_filter.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

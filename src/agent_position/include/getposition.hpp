@@ -79,7 +79,7 @@ class Visualize //速度控制类
     ros::NodeHandle n; // 节点句柄
 
 	ros::Subscriber image_sub;
-	ros::Publisher robot_pub_,line_without_QR_pub;
+	ros::Publisher robot_pub_,line_without_QR_pub,Red_points_pub;
 	robot_msg::robot_pose robot_;
 	// sensor_msgs::PointCloud poly_pc_;
 	
@@ -188,13 +188,14 @@ class Visualize //速度控制类
 				robot_new.position.x = (markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
 				robot_new.position.y = (markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
 				robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
-				if (markerIds[i]>3 && markerIds[i]<13){
+				robot_array_new.robot_pose_array.push_back(robot_new);
+				if (markerIds[i]>10 && markerIds[i]<13){
 					//读取圆心
 					deltax=20+(44-robot_new.position.x)/25.65;
 					deltay=7+(32-robot_new.position.y)/29.71;
 					Point center(cvRound(robot_new.position.x +deltax), cvRound(robot_new.position.y+deltay));
 					//读取半径
-					int radius = cvRound(35);
+					int radius = cvRound(38);
 					// // cv:: Mat circlemask=extractCircularMask(gray,center, radius) ;
 					// // Mat imgAddMask = gray.clone();
 					// // cv::add(circlemask,gray,imgAddMask);
@@ -217,11 +218,61 @@ class Visualize //速度控制类
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
 					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
 					}
+					if (markerIds[i]<10){
+					//读取圆心
+					deltax=20+(44-robot_new.position.x)/25.65;
+					deltay=7+(32-robot_new.position.y)/29.71;
+					Point center(cvRound(robot_new.position.x +deltax), cvRound(robot_new.position.y+deltay));
+					//读取半径
+					int radius = cvRound(25);
 					// cv::imshow("cicle",frame_cut);
-				robot_array_new.robot_pose_array.push_back(robot_new);
+					//绘制圆
+					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
+					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
+					}	
 			}
 		}
 	robot_pub_.publish(robot_array_new);
+	Mat imgAddMask = frame_cut.clone();
+	imgAddMask .setTo(255, Mask1);
+
+	// red color detection
+    cv::Mat hsv_frame;
+    cv::cvtColor(imgAddMask, hsv_frame, cv::COLOR_BGR2HSV);
+	
+    cv::Scalar low_red = cv::Scalar(0,45, 10);
+    cv::Scalar high_red = cv::Scalar(20, 150, 150);
+
+    cv::Mat red_mask;
+    cv::inRange(hsv_frame, low_red, high_red, red_mask);
+
+    cv::Mat red;
+    cv::bitwise_and(frame_cut,frame_cut, red, red_mask);
+	sensor_msgs::PointCloud red_points;
+	for (int ro = 0; ro < red.rows; ro++)
+	{
+		for (int co = 0; co <red.cols; co++)
+		{
+			
+			Vec3b& color=red.at<Vec3b>(ro, co);
+			if (color[1]>low_red[1]-1)
+			{
+				geometry_msgs::Point32 p;
+				p.x=co;
+				p.y=ro;
+				p.z=0;
+				red_points.points.push_back(p);	
+			}
+			
+		}
+	}
+for (auto point : red_points.points) {
+    circle(red, Point(point.x, point.y), 1, Scalar(255, 255, 255), -1);
+}
+
+	Red_points_pub.publish(red_points);
+	cv::imshow("red color",red);
+
 	Mat imgAddMask1 = thre.clone();
 	cv::add(Mask1,thre,imgAddMask1);
 	//cv::imshow("multiply", imgAddMask1);
@@ -275,14 +326,13 @@ class Visualize //速度控制类
 				p.x=col;
 				p.y=row;
 				p.z=0;
-				// pc_without_QR_.points.push_back(p);
+				// pc_without_QR_.points.push_back(p);	
 			}
-			
 		}
 	}
 	  //骨干提取
       Mat skel = skeletonization(connect);
-    	imshow("Skeleton Image", skel);
+    	// imshow("Skeleton Image", skel);
         //曲线拟合
         //输入拟合点
         std::vector<cv::Point> points;

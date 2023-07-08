@@ -28,17 +28,16 @@ class Point_tube:
     def __init__(self):
         self.feature_point=PointCloud()
         self.middlepoint=Point32()
+        self.flag=0
         self.sub = rospy.Subscriber('/feature_points', PoseArray, self.tube_callback,queue_size=10)
+        # self.sub = rospy.Subscriber('/filter_points', PoseArray, self.tube_callback,queue_size=10)
     def tube_callback(self, msg): # tube msg
         self.feature_point=PointCloud()
         for pose in msg.poses:
+            pose.position.x= pose.position.x* 1.5037594e-3
+            pose.position.y= pose.position.y* 1.5306122e-3 
             self.feature_point.points.append(pose.position)
-        if len(msg.poses)%2==1: # odd
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses)+1)/2)].x* 1.5037594e-3 #to m
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses)+1)/2)].y* 1.5306122e-3 
-        else:
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x* 1.5037594e-3
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
+        self.flag=1
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.poses)
 
 
@@ -80,51 +79,65 @@ def v2w(u_sol,N):
 if __name__ == '__main__':
     try:
         rospy.init_node('Jmatrix_update')
-        N=5
+        N=2
         Robot = QRrobot(N)
         feature=Point_tube()
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
         rate = rospy.Rate(5)
-        p=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]] #position of robot
+        
         # tp=[feature.middlepoint.x,feature.middlepoint.y]
-        tp=[]
-        for i in range(2,N,1):
-            tp.append(Robot.robotx[i])
-            tp.append(Robot.roboty[i])
+        # tp=[]
+        # for i in range(2,N,1):
+        #     tp.append(Robot.robotx[i])
+        #     tp.append(Robot.roboty[i])
         x=[]
         y=[]
         i=0
-        T_num=70
+        T_num=80
         while not rospy.is_shutdown():
-            if i <T_num and Robot.flag==1 and feature.middlepoint is not None:
+            if i <T_num and Robot.flag==1 and feature.flag==1:
                 #random move
                 # ran_vel=0.4*np.random.uniform(-1, 1, size=(1, 4))
-                u_sol=np.array([[0.02*random.random(),0.5*random.uniform(-1, 1),0.02*random.random(),0.5*random.uniform(-1, 1)]])
+                if i==0:
+                    tp=[]
+                    p=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]] #position of robot
+                    for j in range(0,3,1):
+                        tp.append(feature.feature_point.points[j].x)
+                        tp.append(feature.feature_point.points[j].y)
+                u_sol=np.array([[0.015*random.random(),1*random.uniform(-1, 1),0.015*random.random(),1*random.uniform(-1, 1)]])
                 ran_vel=v2w(u_sol,1)
                 vel_msg = Float64MultiArray(data=ran_vel[0])
                 rospy.loginfo(vel_msg)
                 pub.publish(vel_msg)
-                d = rospy.Duration(0.3)
+                d = rospy.Duration(0.15)
                 rospy.sleep(d)
                 ran_vel=np.zeros((1,4))
                 vel_msg = Float64MultiArray(data=ran_vel[0])
                 rospy.loginfo(vel_msg)
                 pub.publish(vel_msg)
-                d = rospy.Duration(0.2)
+                d = rospy.Duration(0.15)
                 rospy.sleep(d)
                 p_new=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]]
-                # tp_new=[feature.middlepoint.x,feature.middlepoint.y]
                 tp_new=[]
-                for j in range(2,N,1):
-                    tp_new.append(Robot.robotx[j])
-                    tp_new.append(Robot.roboty[j])
+                if len(feature.feature_point.points)!=3:
+                    tp_new=tp.copy()
+                else:
+                    tp_new=[]
+                    for j in range(0,3):
+                        tp_new.append(feature.feature_point.points[j].x)
+                        tp_new.append(feature.feature_point.points[j].y)
+                # tp_new=[feature.middlepoint.x,feature.middlepoint.y]
+                # tp_new=[]
+                # for j in range(2,N,1):
+                #     tp_new.append(Robot.robotx[j])
+                #     tp_new.append(Robot.roboty[j])
                 deltax=np.array(p_new)-np.array(p)
                 deltay=np.array(tp_new)-np.array(tp)
-                y.append(np.reshape(deltay,(1,2*(N-2)))[0])
+                y.append(np.reshape(deltay,(1,2*3))[0])
                 x.append(deltax)
-                p=p_new
-                tp=tp_new
+                p=p_new.copy()
+                tp=tp_new.copy()
                 i=i+1
                 if i>T_num-10:
                 # Find the coefficients (m and b) of the line y = mx + b that best fits the data
@@ -135,7 +148,7 @@ if __name__ == '__main__':
                     vel_msg = Float64MultiArray(data=ran_vel[0])
                     rospy.loginfo(vel_msg)
                     pub.publish(vel_msg)
-                    d = rospy.Duration(0.3)
+                    d = rospy.Duration(0.1)
                     rospy.sleep(d)
         rate.sleep()
     except rospy.ROSInterruptException:

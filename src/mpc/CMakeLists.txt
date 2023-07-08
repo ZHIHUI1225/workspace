@@ -167,6 +167,8 @@ catkin_install_python(PROGRAMS
   scripts/mpc_multipoints.py
   scripts/Jmatrix_Bezier.py
   scripts/mpc_Bezier.py
+  scripts/mpc_multipoints_hard_constraints.py
+  scripts/mpc_filter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

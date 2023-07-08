@@ -24,6 +24,7 @@ from scipy.special import comb
 wheel_base = 80e-3  # mm
 wheel_diameter = 31e-3  # mm
 L=280e-3 #the length of tube
+N_target=5
 def get_bezier_parameters(X, Y, degree=3):
     """ Least square qbezier fit using penrose pseudoinverse.
     """
@@ -96,9 +97,9 @@ def bezier_curve(points, nTimes=50):
 class Point_tube:
     def __init__(self):
         self.feature_point=PointCloud()
-        self.controlpoints=np.zeros((1,10))
+        self.controlpoints=np.zeros((1,N_target*2))
         # self.sub = rospy.Subscriber('/line_without_QR', PointCloud, self.tube_callback,queue_size=10)
-        self.sub = rospy.Subscriber('control_points',PoseArray, self.tube_callback,queue_size=10)
+        self.sub = rospy.Subscriber('filter_points',PoseArray, self.tube_callback,queue_size=10)
     def tube_callback(self, msg): # tube msg
         i=0
         for pose in msg.poses:
@@ -144,7 +145,7 @@ def v2w(u_sol,N):
 if __name__ == '__main__':
     try:
         rospy.init_node('Jmatrix_update')
-        N=5
+        N=2
         Robot = QRrobot(N)
         feature=Point_tube()
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
@@ -152,7 +153,7 @@ if __name__ == '__main__':
         rate = rospy.Rate(5)
         p=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]] #position of robot
         # tp=[feature.middlepoint.x,feature.middlepoint.y]
-        tp=feature.controlpoints[0][2:-2]
+        tp=feature.controlpoints[0]
         x=[]
         y=[]
         i=0
@@ -161,9 +162,9 @@ if __name__ == '__main__':
             if i <T_num and Robot.flag==1 and feature.controlpoints[0][0]!=0:
                 #random move
                 if i==0:
-                    tp=feature.controlpoints[0][2:-2].copy()
+                    tp=feature.controlpoints[0].copy()
                 # ran_vel=0.4*np.random.uniform(-1, 1, size=(1, 4))
-                u_sol=np.array([[0.03*random.random(),0.8*random.uniform(-1, 1),0.03*random.random(),0.8*random.uniform(-1, 1)]])
+                u_sol=np.array([[0.015*random.random(),0.8*random.uniform(-1, 1),0.015*random.random(),0.8*random.uniform(-1, 1)]])
                 ran_vel=v2w(u_sol,1)
                 vel_msg = Float64MultiArray(data=ran_vel[0])
                 rospy.loginfo(vel_msg)
@@ -177,10 +178,10 @@ if __name__ == '__main__':
                 d = rospy.Duration(0.2)
                 rospy.sleep(d)
                 p_new=[Robot.robotx[0],Robot.roboty[0],Robot.robotx[1],Robot.roboty[1]]
-                tp_new=feature.controlpoints[0][2:-2].copy()
+                tp_new=feature.controlpoints[0].copy()
                 deltax=np.array(p_new)-np.array(p)
                 deltay=tp_new-tp
-                y.append(np.reshape(deltay,(1,2*(N-2)))[0])
+                y.append(np.reshape(deltay,(1,2*(N_target)))[0])
                 x.append(deltax)
                 p=p_new
                 tp=tp_new

@@ -365,7 +365,7 @@ if __name__ == '__main__':
             #without angle error
             #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
-             obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
+            obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
                 +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
         g = [] # equal constrains
         lbg = []
@@ -425,7 +425,7 @@ if __name__ == '__main__':
                     model_error_y.append(x_next[9][0]-x0[9][0])
                     model_errorplot.on_running(model_error_x,model_error_y)
                 # if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])+np.linalg.norm(x0[:2]-xs[-2*N_target-4:-2*N_target-2])+np.linalg.norm(x0[3:5]-xs[-2*N_target-2:-2*N_target])>0.1 :
-                if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])>0.06 :
+                if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])>0.08 :
                     ## set parameter
                     ## set parameter
                     c_p = np.concatenate((x0, xs))

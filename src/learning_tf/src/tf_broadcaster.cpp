@@ -46,14 +46,14 @@ void poseCallback(const robot_msg::robot_pose_array& msg){
        transform.setOrigin( tf::Vector3(robot1.x, robot1.y, robot1.z) );
       tf::Quaternion q;
       double yaw=atan2(robot2.y-robot1.y,robot2.x-robot1.x);
-        // q.setRPY(M_PI, 0,yaw);
-      q.setEuler(0,M_PI,yaw);
+      q.setRPY(M_PI, 0,yaw);
+      // q.setEuler(0,M_PI,yaw);
   
       
       transform.setRotation(q);
       //   std::stringstream ss;
       // ss << msg.robot_pose_array[i].ID;
-      br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map","local"));
+      br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world","local"));
     }
 
 }

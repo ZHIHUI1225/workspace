@@ -26,6 +26,8 @@ from scipy.optimize import fsolve
 from scipy.special import ellipe
 from cv_bridge import CvBridge
 import cv2
+import scipy.optimize as opt
+from numpy import linalg as LA
 # from dlodynamics import dlodynamics
 # from Dynamicupdateplot import DynamicUpdate
 
@@ -34,22 +36,25 @@ wheel_diameter = 31e-3  # m
 l_center=11* 1.5037594e-3
 L=200* 1.5037594e-3 #the length of tube
 N_target=3 # feature points number
-
+plt.ion()
 class Point_tube:
     def __init__(self):
         self.feature_point=PointCloud()
-        self.middlepoint=Point32()
+        self.flag=0
         self.sub = rospy.Subscriber('/feature_points', PoseArray, self.tube_callback,queue_size=10)
     def tube_callback(self, msg): # tube msg
         self.feature_point=PointCloud()
         for pose in msg.poses:
+            pose.position.x= pose.position.x* 1.5037594e-3
+            pose.position.y= pose.position.y* 1.5306122e-3 
             self.feature_point.points.append(pose.position)
-        if len(msg.poses)%2==1: # odd
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses)+1)/2)].x* 1.5037594e-3 #to m
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses)+1)/2)].y* 1.5306122e-3 
-        else:
-            self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x* 1.5037594e-3
-            self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
+            self.flag=1
+        # if len(msg.poses)%2==1: # odd
+        #     self.middlepoint.x=self.feature_point.points[int((len(msg.poses)+1)/2)].x* 1.5037594e-3 #to m
+        #     self.middlepoint.y=self.feature_point.points[int((len(msg.poses)+1)/2)].y* 1.5306122e-3 
+        # else:
+        #     self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x* 1.5037594e-3
+        #     self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.poses)
 
 
@@ -99,22 +104,130 @@ def shift_movement(T, x0, u, f,un,J):
     u_next_ = ca.vertcat(u[un:, :], u[-un:, :])
     return state_next_, u_next_
 
+def my_func(x):
+    if x < 0:
+        return 0
+    else:
+        return x
+
+class PlotUpdate():
+    #Suppose we know the x range
+    #min_x = 0
+    #max_x = 300
+
+    def __init__(self,N):
+        #Set up plot
+        #self.figure, self.ax = plt.subplots()
+        self.figure, (self.ax1, self.ax2) = plt.subplots(1, 2, sharey=True)
+        self.lines1=[]
+        self.lines2=[]
+        self.number=N
+        for i in range(self.number):
+            line, = self.ax1.plot([],[],label=str(i+1)) #error_x
+            self.lines1.append(line)
+            line, = self.ax2.plot([],[],label=str(i+1)) #error_x
+            self.lines2.append(line)
+        #self.lines1, = self.ax1.plot([],[]) #error_x
+        #self.lines2, = self.ax2.plot([],[]) #error_y
+        #Autoscale on unknown axis and known lims on the other
+        self.ax1.set_autoscaley_on(True)
+        #self.ax1.set_xlim(self.min_x, self.max_x)
+        self.ax2.set_autoscaley_on(True)
+        #self.ax2.set_xlim(self.min_x, self.max_x)
+        #Other stuff
+        self.ax1.grid()
+        self.ax2.grid()
+        self.ax1.legend(loc='upper left')
+        self.ax2.legend(loc='upper left')
+        ...
+
+    def on_running(self, error_x, error_y):
+        #Update data (with the new _and_ the old points)
+        for i in range(self.number):
+            xdata=np.arange(0,len(error_x))
+            self.lines1[i].set_xdata(xdata)
+            self.lines1[i].set_ydata(error_x)
+            ydata=np.arange(0,len(error_y))
+            self.lines2[i].set_xdata(ydata)
+            self.lines2[i].set_ydata(error_y)
+        #Need both of these in order to rescale
+        self.ax1.relim()
+        self.ax1.autoscale_view()
+        self.ax2.relim()
+        self.ax2.autoscale_view()
+        #We need to draw *and* flush
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+       
+
+class tubeshape():
+    def __init__(self,length:float,p1:np.array,p2:np.array):
+            self.l=length # length of tube
+            # position of two ends
+            self.p1=p1 
+            self.p2=p2
+            #distance of two ends
+            self.x0=LA.norm(self.p1-self.p2,2)
+
+    def update(self,p1,p2):
+        self.p1=p1
+        self.p2=p2
+        self.x0=LA.norm(self.p1-self.p2,2)
+# from local coordinate to world cooridinate
+    def transformR(self):
+        theta=math.atan2(self.p2[1]-self.p1[1],self.p2[0]-self.p1[0])
+        R=np.array([[math.cos(theta),-math.sin(theta)],[math.sin(theta),math.cos(theta)]])
+        return R
+    def get_a(self):
+        def lengthl(delta):
+            k=1/np.sqrt(1+delta)
+            F=(k**4-28*k**2+64)/(4*k**4-40*k**2+64)-self.l*np.pi/(2*self.x0)/np.sqrt(1+1/delta)
+            return F
+        delta0=4*self.x0**2/np.pi**2/(self.l**2-self.x0**2)
+        delta,_,ier,_ =opt.fsolve(lengthl,my_func(delta0),xtol=1e-05,full_output=True)
+        if ier==1:
+            a=-np.sqrt(self.x0**2/(np.pi**2*delta))
+        else:
+            a=0
+        return a
+    
+    def getshape(self):
+        x=np.arange(0,self.x0,self.x0/100)
+        a=self.get_a()
+        if a==0:
+            P=[]
+        else:
+            y=a*np.sin(np.pi*x/self.x0)
+            R=self.transformR()
+            P=np.dot(R,np.array([x,y]))
+            P[0,:]=np.transpose(np.array(P[0,:]+self.p1[0]))
+            P[1,:]=np.transpose(np.array(P[1,:]+self.p1[1]))
+        return P
+    def get_points(self,n):
+        points=[]
+        y=self.getshape()
+        if y!=[]:
+            for i in range(1,n+1):
+            #for i in range(int(len(y[0,:])/(n+1)),len(y[0,:])-1,int(len(y[0,:])/(n+1))):
+                points.append(y[:,i*int(len(y[0,:])/(n+1))])
+        return points
+
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
 
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
         vel = [0]*2
-
+        model_errorplot=PlotUpdate(1)
         Robot = QRrobot(N_target+2)
         feature=Point_tube()
         # Frame=frame_image()
-        T = 0.1# sampling time [s]
-        N = 30 # prediction horizon
-        un= 3 # control step
-        v_max = 0.02
+        T = 0.15# sampling time [s]
+        N = 40# prediction horizon
+        un= 5 # control step
+        v_max = 0.015
         omega_max = 0.5
-        rate = rospy.Rate(1)
+        rate = rospy.Rate(10)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
         theta = ca.SX.sym('theta')
@@ -138,18 +251,26 @@ if __name__ == '__main__':
 
         X = ca.SX.sym('X', (N+1), n_states*2+2*N_target) # x1,y1,theta1,x2,y1,thate2,xs,ys
 
-        P = ca.SX.sym('P', n_states*2+2*N_target+2*N_target)#initial states +target states 2 of s
+        # P = ca.SX.sym('P', n_states*2+2*N_target+2*N_target)#initial states +target states 2 of s
+        #add the targert position of agents
+        P = ca.SX.sym('P', n_states*2+2*N_target+2*N_target+4)#initial states +target states 2 of s
 
 
         ### define
         X[0,:] = P[:n_states*2+2*N_target] # initial condiction
         #J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
-        J=np.array([[ 0.73733514 ,-0.12956055 , 0.19306983 ,-0.00532218],\
-        [-0.58022021 , 0.28698653 , 0.54734037  ,0.71399109],\
-        [ 0.26919498 ,-0.05919658 , 0.64840204 , 0.06148084],\
-        [-0.5442481  , 0.35345216  ,0.51554941  ,0.82019431],\
-        [ 0.94483018 ,-0.01921938  ,0.05820775 ,-0.23539053],\
-        [-0.32655457 , 0.5369566   ,0.26374435 , 0.52542205]])
+        # J=np.array([[ 0.02853458  ,0.13574227 , 0.10067625 , 0.01680015],\
+        #             [ 0.0416852  , 0.19641798 ,-0.04737727,  0.0230309 ],\
+        #             [-0.048418    ,0.22642215 , 0.13898813 ,-0.00126396],\
+        #             [ 0.03964425  ,0.27153569 ,-0.03465361 , 0.11311918],\
+        #             [-0.09097216  ,0.1398251  , 0.24858707 , 0.11907272],\
+        #             [ 0.18399492  ,0.16928259, -0.0838745 , -0.05053774]])
+        J=np.array([[ 0.28348009 ,-0.10893156, -0.0462114 , -0.06149945],\
+                    [ 0.15820577  ,0.3135021 , -0.23376026 , 0.1723733 ],\
+                    [ 0.13487716 ,-0.07193869 , 0.16223159 ,-0.02951396],\
+                    [ 0.2540872  , 0.27042158 ,-0.35836604 , 0.2319037 ],\
+                    [ 0.00593047  ,0.06580107 , 0.30361478 ,-0.03436256],\
+                    [ 0.17973368  ,0.22378411 ,-0.3361492  , 0.14395073]])
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])
@@ -161,14 +282,18 @@ if __name__ == '__main__':
 
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
-        Q = np.eye(2*N_target)
+        Q = 0.1*np.eye(2*N_target)
         R=0.00001*np.eye(4)
+        Qr=0.01*np.eye(2)
         #### cost function
         obj = 0 #### cost
         for i in range(N):
             #without angle error
             #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
-            obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
+            # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
+            obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
+                +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
+                
         g = [] # equal constrains
         lbg = []
         ubg = []
@@ -176,12 +301,12 @@ if __name__ == '__main__':
             for j in range(8):
                 if j%3==0:
                     g.append(X[i, j])
-                    lbg.append(30*1.5306122e-3)
-                    ubg.append(1000*1.5306122e-3 )
+                    lbg.append(20*1.5306122e-3)
+                    ubg.append(1100*1.5306122e-3 )
                 if j%3==1:
                     g.append(X[i, j])
-                    lbg.append(30* 1.5037594e-3)
-                    ubg.append(400* 1.5037594e-3)
+                    lbg.append(20* 1.5037594e-3)
+                    ubg.append(450* 1.5037594e-3)
         for i in range(N):
             g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
             lbg.append(L*0.5)
@@ -193,36 +318,55 @@ if __name__ == '__main__':
         lbx = []
         ubx = []
         for _ in range(N):
-            lbx.append(0)
+            lbx.append(-v_max)
             ubx.append(v_max)
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
         for _ in range(N):
-            lbx.append(0)
+            lbx.append(-v_max)
             ubx.append(v_max)
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
-        xs = np.array([400* 1.5037594e-3, 180* 1.5306122e-3,360* 1.5037594e-3, 200* 1.5306122e-3,440* 1.5037594e-3, 200* 1.5306122e-3 ]).reshape(-1, 1) # final state
+        L_real=200* 1.5037594e-3#the length of tube
+        r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
+        r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
+        Tube=tubeshape(length=L_real,p1=r1,p2=r2)
+        xp=np.array(Tube.get_points(N_target)).reshape(-1,1)
+        xt=np.concatenate((np.reshape(r1,(2,1)),np.reshape(r2,(2,1)),np.reshape(xp,(len(xp),1))))
+        xs=np.array(xt).reshape(-1,1)
+        # xs = np.array([440* 1.5037594e-3, 200* 1.5306122e-3,400* 1.5037594e-3, 220* 1.5306122e-3,360* 1.5037594e-3, 200* 1.5306122e-3 ]).reshape(-1, 1) # final state
         # center=(int(xs[0]),int(xs[1]))
         # cv2.circle(Frame.image, center, 2, (255, 0, 255), -1)
         x_c = [] # contains for the history of the state
         u_c = []
         # t_c = [t0] # for the time
         xx = []
-
+        x_next=None
+        model_error_x=[]
+        model_error_y=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         while not rospy.is_shutdown():
-            if Robot.flag==1 and feature.middlepoint.x!=0:
+            if Robot.flag==1 and feature.flag==1:
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
-                for xk in range(2,N_target+2,1):
-                    x0.append(np.array(Robot.robotx[xk]))
-                    x0.append(np.array(Robot.roboty[xk]))
-                x0=np.array(x0).reshape(-1,1)
+                if len(feature.feature_point.points)!=3:
+                    x0[:6]=np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]).reshape(-1,1)
+                else:
+                    x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
+                    for xk in range(N_target):
+                        x0.append(feature.feature_point.points[xk].x)
+                        x0.append(feature.feature_point.points[xk].y)
+                    x0=np.array(x0).reshape(-1,1)
+                if x_next is not None:
+                    model_error_x.append(x_next[8][0]-x0[8][0])
+                    model_error_y.append(x_next[9][0]-x0[9][0])
+                    model_errorplot.on_running(model_error_x,model_error_y)
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
-                if np.linalg.norm(x0[-2*N_target:]-xs)>0.03 :
+                ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
+                for i in range(1,N_target,1):
+                    ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
+                if ee[0]>0.025 or ee[1]>0.025 or ee[2]>0.025:
                     ## set parameter
                     c_p = np.concatenate((x0, xs))
                     init_control = ca.reshape(u0, -1, 1)

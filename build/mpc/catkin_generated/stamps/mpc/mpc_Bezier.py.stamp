@@ -299,7 +299,7 @@ if __name__ == '__main__':
         Robot = QRrobot(N_target+2)
         feature=Point_tube()
         model_errorplot=PlotUpdate(1)
-        Tube=tubeshape(length=L,p1=np.array([500* 1.5037594e-3,300* 1.5306122e-3 ]),p2=np.array([650* 1.5037594e-3,320* 1.5306122e-3 ]))
+        Tube=tubeshape(length=L*0.85,p1=np.array([500* 1.5037594e-3,300* 1.5306122e-3 ]),p2=np.array([650* 1.5037594e-3,300* 1.5306122e-3 ]))
         xt=np.array(Tube.get_control_points(4)).reshape(-1,1)
         xs=np.reshape(xt,(len(xt),1))
         xs=np.vstack((xs[:2],xs[-2:],xs[2:-2]))
@@ -358,14 +358,14 @@ if __name__ == '__main__':
 
         Q = 1*np.eye(2*N_target)
         R=0.00001*np.eye(4)
-        Qr=1*np.eye(2)
+        Qr=0*np.eye(2)
         #### cost function
         obj = 0 #### cost
         for i in range(N):
             #without angle error
             #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
-             obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
+            obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
                 +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
         g = [] # equal constrains
         lbg = []
@@ -382,7 +382,7 @@ if __name__ == '__main__':
                     ubg.append(400* 1.5037594e-3)
         for i in range(N):
             g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
-            lbg.append(L*0.45)
+            lbg.append(L*0.35)
             ubg.append(L*0.8)
 
         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
@@ -424,7 +424,9 @@ if __name__ == '__main__':
                     model_error_x.append(x_next[8][0]-x0[8][0])
                     model_error_y.append(x_next[9][0]-x0[9][0])
                     model_errorplot.on_running(model_error_x,model_error_y)
-                if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])+np.linalg.norm(x0[:2]-xs[-2*N_target-4:-2*N_target-2])+np.linalg.norm(x0[3:5]-xs[-2*N_target-2:-2*N_target])>0.1 :
+                # if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])+np.linalg.norm(x0[:2]-xs[-2*N_target-4:-2*N_target-2])+np.linalg.norm(x0[3:5]-xs[-2*N_target-2:-2*N_target])>0.1 :
+                if np.linalg.norm(x0[-2*N_target:]-xs[-2*N_target:])>0.08 :
+                    ## set parameter
                     ## set parameter
                     c_p = np.concatenate((x0, xs))
                     init_control = ca.reshape(u0, -1, 1)

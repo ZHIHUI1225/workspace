@@ -22,6 +22,8 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import TransformStamped
 from numpy import linalg as LA
 import scipy.optimize as opt
+L_real=200* 1.5037594e-3 *0.85#the length of tube
+N_target=5
 def get_bezier_parameters(X, Y, degree=3):
     """ Least square qbezier fit using penrose pseudoinverse.
     """
@@ -108,13 +110,28 @@ class TUBE:
             self.PA.poses.append(pose)
        # rospy.loginfo(rospy.get_caller_id() + "I heard %s", self.PC)
 
+#  red points of the tube
+class Redpoints:
+    def __init__(self):
+        self.points=PoseArray()
+        self.sub=rospy.Subscriber('/Red_points',PointCloud,self.red_callback,queue_size=10)
+    def red_callback(self,msg):
+        self.points=PoseArray()
+        self.points.header=msg.header
+        self.points.header.frame_id="world"
+        for point in msg.points:
+            pose=Pose()
+            pose.position=point
+            self.points.poses.append(pose)
+
+
 class frame_image():
     def __init__(self):
         # Params
         self.image=None
         self.br = CvBridge()
         # Node cycle rate (in Hz).
-        self.loop_rate = rospy.Rate(1)
+        self.loop_rate = rospy.Rate(30)
         # Subscribers
         rospy.Subscriber('/camera/image',Image,self.image_callback,queue_size=10)
 
@@ -222,6 +239,16 @@ class TFListener:
 #     A = np.zeros((n + 1, 1))
 #     A = np.linalg.solve(X, Y)
 #     return A
+def convert2posearray(input):
+    transformed_pose = PoseArray()
+    transformed_pose.header.frame_id = "local"
+    for i in range(len(input)):
+        pose_stamped = PoseStamped()
+        pose_stamped.header.frame_id = "local"
+        pose_stamped.pose.position=input[i].position
+        transformed_pose.poses.append(pose_stamped.pose)
+    return transformed_pose
+            
 def my_func(x):
     if x < 0:
         return 0
@@ -296,14 +323,29 @@ if __name__ == '__main__':
     try:
         rospy.init_node('tf_listener_node')
         tube=TUBE()
+        RedPoints=Redpoints()
         tf_w2l= TFListener('world','local')
         Frame=frame_image()
         feature_points_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         control_points_pub=rospy.Publisher('control_points',PoseArray,queue_size=1)
         # listener_w2l = tf.TransformListener()
-        rate = rospy.Rate(10.0)
+        rate = rospy.Rate(30.0)
+        # flag=0
+        # wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (Frame.image.size[0], 520-44), True)
         while not rospy.is_shutdown() :
-            if tube.PA.poses:
+            # if Frame.image is not None and flag==0:
+            #     wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (1225-163, 520-44), True)
+            #     flag=1
+            #plot middle point of the tube
+            if tube.PA.poses and Frame.image is not None:
+            #     i=0
+            #     for pose in tube.PA.poses:
+            #         i=i+1
+            #         if i==int(len(tube.PA.poses)/2):
+            #             center=(int(pose.position.x),int(pose.position.y))
+            #             cv2.circle(Frame.image, center, 1, (0, 255, 0), -1)
+            #     cv2.imshow("allpoints",Frame.image)
+            #     cv2.waitKey(1)
                 line_local=tf_w2l.transform(tube.PA)
                 if line_local:
                     # print(line_local.poses)
@@ -311,7 +353,6 @@ if __name__ == '__main__':
                     xpoints=[]
                     ypoints=[]
                     points=[]
-                    
                     for i in range(len(sorted_line)):
                         points.append([sorted_line[i].position.x,sorted_line[i].position.y])
                         xpoints.append(sorted_line[i].position.x)
@@ -343,48 +384,71 @@ if __name__ == '__main__':
                     k = 0
                     pc_10 = []
                     delta_l=0
-                    pc_10.append(sorted_line[0])
-                    for i in range(1, len(sorted_line)):
-                        l = math.hypot(sorted_line[k].position.x - sorted_line[i].position.x, sorted_line[k].position.y - sorted_line[i].position.y)
-                        if l > 1:
-                            delta_l=delta_l+l
-                            k = i
-                            if delta_l>L/2-1:
-                                # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
-                                pc_10.append(sorted_line[i])
-                                delta_l=0
-                                break
+                    # pc_10.append(sorted_line[0])
+                    for j in range(N_target+1):
+                        pc_10.append(sorted_line[int(len(sorted_line)/(N_target+1)*j)])
+                    
+                    # pc_10.append(sorted_line[int(len(sorted_line)/4)])
+                    # pc_10.append(sorted_line[int(len(sorted_line)/2)])
+                    # pc_10.append(sorted_line[int(len(sorted_line)/4*3)])
+                    # for i in range(1, len(sorted_line)):
+                    #     l = math.hypot(sorted_line[k].position.x - sorted_line[i].position.x, sorted_line[k].position.y - sorted_line[i].position.y)
+                    #     if l > 1:
+                    #         delta_l=delta_l+l
+                    #         k = i
+                    #         if delta_l>L/4-1:
+                    #             # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
+                    #             pc_10.append(sorted_line[i])
+                    #             delta_l=0
+                    #         if delta_l>L/2-1:
+                    #             # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
+                    #             pc_10.append(sorted_line[i])
+                    #             delta_l=0
+                    #         if delta_l>L/4*3-1:
+                    #             # ipt = (sorted_line[i].position.x, sorted_line[i].position.y)
+                    #             pc_10.append(sorted_line[i])
+                    #             delta_l=0
+                    #             break
                     pc_10.append(sorted_line[int(len(sorted_line)-1)])        
                             # center = (int(ipt[0]), int(ipt[1]))
 
                     # print(pc_10)
+                    # feature_points_local=convert2posearray(pc_10)
+                    # feature_points_pub.publish(feature_points_local)
                     feature_points=tf_w2l.transform_back(pc_10)
                     feature_points_pub.publish(feature_points)
                     # Tube=tubeshape(length=200,p1=np.array([500,200]),p2=np.array([620,210]))
                     # xt=np.array(Tube.get_points(3)).ravel()
                     L=200* 1.5037594e-3 #the length of tube
-                    Tube=tubeshape(length=L,p1=np.array([500* 1.5037594e-3,300* 1.5306122e-3 ]),p2=np.array([650* 1.5037594e-3,320* 1.5306122e-3 ]))
-                    xt=np.array(Tube.get_control_points(4)).reshape(-1,1)
+                    Tube=tubeshape(length=L_real,p1=np.array([500* 1.5037594e-3,300* 1.5306122e-3 ]),p2=np.array([650* 1.5037594e-3,300* 1.5306122e-3 ]))
+                    xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
+                    # xt=np.array(Tube.get_control_points(N_target+1)).reshape(-1,1)
+                    # for pose in feature_points_local.poses:
                     for pose in feature_points.poses:
                         center=(int(pose.position.x),int(pose.position.y))
-                        if Frame.image is not None:
-                            # cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
-                            for i in range(0,len(xt),2):
-                                center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
-                                cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
-                            # xs = np.array([360, 200]).reshape(-1, 1) # final state
-                            # center=(int(xs[0]),int(xs[1]))
-                            # cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
-                            # xs = np.array([440, 200]).reshape(-1, 1) # final state
-                            # center=(int(xs[0]),int(xs[1]))
-                            # cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
-                    for pose in control_points.poses:
-                        center=(int(pose.position.x),int(pose.position.y))
-                        if Frame.image is not None:
-                            cv2.circle(Frame.image, center,2, (0, 0, 255), -1)
-                    if Frame.image is not None:
-                        cv2.imshow("frame",Frame.image)
-                        cv2.waitKey(1)
+                        cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
+                    
+                        ###  mpc_multipoints ###
+                        # xs = np.array([360, 200]).reshape(-1, 1) # final state
+                        # center=(int(xs[0]),int(xs[1]))
+                        # cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
+                        # xs = np.array([400, 220]).reshape(-1, 1) # final state
+                        # center=(int(xs[0]),int(xs[1]))
+                        # cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
+                        # xs = np.array([440, 200]).reshape(-1, 1) # final state
+                        # center=(int(xs[0]),int(xs[1]))
+                        # cv2.circle(Frame.image, center, 5, (255, 0, 0), -1)
+                        ###  
+                    ### Bezier target and control points plot
+                    # for pose in control_points.poses:
+                    #     center=(int(pose.position.x),int(pose.position.y))
+                    #     if Frame.image is not None:
+                    #         cv2.circle(Frame.image, center,2, (0, 0, 255), -1)
+                    # for i in range(0,len(xt),2):
+                    #     center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
+                    #     cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
+                    cv2.imshow("frame",Frame.image)
+                    cv2.waitKey(1)
                     #曲线拟合
                     # Num=3
                     # A = np.zeros((Num + 1, 1))
@@ -408,7 +472,7 @@ if __name__ == '__main__':
                     #     points_fitted.append([x, y])
                     #     center = (int(round(points_fitted[i][0])), int(round(points_fitted[i][1])))
                     
-        
+                    # wri.write(Frame.image)
             rate.sleep()
 
     except rospy.ROSInterruptException:

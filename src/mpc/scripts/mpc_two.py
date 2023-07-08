@@ -143,6 +143,7 @@ if __name__ == '__main__':
         X[0,:] = P[:n_states*3-1] # initial condiction
         J=np.array([[0.5,0,0.5,0],[-0,0.5,-0,0.5]])
         # J=np.array([[ 0.50804845, -0.06911198 , 0.47035364 ,-0.18787793],[ 0.04380426 ,-0.15982708 , 0.09122273 , 0.58781901]])
+        
         ### define the relationship within the horizon
         for i in range(N):
             f_value = f(X[i, :n_states], U[i, :2])

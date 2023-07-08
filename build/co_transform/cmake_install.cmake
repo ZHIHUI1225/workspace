@@ -56,3 +56,15 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/co_transform" TYPE PROGRAM FILES "/home/romi/workspace/build/co_transform/catkin_generated/installspace/tf_listener.py")
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/co_transform" TYPE PROGRAM FILES "/home/romi/workspace/build/co_transform/catkin_generated/installspace/tf_listener_color.py")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/co_transform" TYPE PROGRAM FILES "/home/romi/workspace/build/co_transform/catkin_generated/installspace/Kalman_filter.py")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/co_transform" TYPE PROGRAM FILES "/home/romi/workspace/build/co_transform/catkin_generated/installspace/low_pass_filter.py")
+endif()
+
