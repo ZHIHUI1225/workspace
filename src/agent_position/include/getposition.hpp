@@ -224,7 +224,7 @@ class Visualize //速度控制类
 					deltay=7+(32-robot_new.position.y)/29.71;
 					Point center(cvRound(robot_new.position.x +deltax), cvRound(robot_new.position.y+deltay));
 					//读取半径
-					int radius = cvRound(25);
+					int radius = cvRound(28);
 					// cv::imshow("cicle",frame_cut);
 					//绘制圆
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);

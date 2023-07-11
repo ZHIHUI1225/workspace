@@ -358,8 +358,8 @@ if __name__ == '__main__':
         RedPoints=Redpoints()
         tf_w2l= TFListener('world','local')
         Frame=frame_image()
-        robot2=Robot2()
-        robot1=Robot1()
+        # robot2=Robot2()
+        # robot1=Robot1()
         # feature_points_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         redpoints_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         # listener_w2l = tf.TransformListener()
@@ -369,9 +369,9 @@ if __name__ == '__main__':
             if Frame.image is not None and flag==0:
                 wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 10, (1229-63,520-44), True)
                 flag=1
-            if  RedPoints.points.poses and Frame.image is not None and robot1.p.poses and robot2.p.poses:
-                robot2_local=tf_w2l.transform(robot2.p)
-                robot1_local=tf_w2l.transform(robot1.p)
+            if  RedPoints.points.poses and Frame.image is not None:
+                # robot2_local=tf_w2l.transform(robot2.p)
+                # robot1_local=tf_w2l.transform(robot1.p)
                 line_local=tf_w2l.transform(RedPoints.points)
                 if line_local:
                     # print(line_local.poses)
@@ -410,18 +410,18 @@ if __name__ == '__main__':
                     red_points=tf_w2l.transform_back(redlist)
                     redpoints_pub.publish(red_points)
                     # for pose in feature_points_local.poses:
-                    L_real=200* 1.5037594e-3#the length of tube
-                    r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
-                    r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
-                    Tube=tubeshape(length=L_real,p1=r1,p2=r2)
-                    xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
-                    center=(int(r1[0]/1.5037594e-3),int(r1[1]/1.5306122e-3))
-                    cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                    center=(int(r2[0]/1.5037594e-3),int(r2[1]/1.5306122e-3))
-                    cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                    for i in range(0,len(xt),2):
-                        center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
-                        cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
+                    # L_real=200* 1.5037594e-3#the length of tube
+                    # r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
+                    # r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
+                    # Tube=tubeshape(length=L_real,p1=r1,p2=r2)
+                    # xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
+                    # center=(int(r1[0]/1.5037594e-3),int(r1[1]/1.5306122e-3))
+                    # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
+                    # center=(int(r2[0]/1.5037594e-3),int(r2[1]/1.5306122e-3))
+                    # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
+                    # for i in range(0,len(xt),2):
+                    #     center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
+                    #     cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
                     if red_points is not None:
                         for pose in red_points.poses:
                             center=(int(pose.position.x),int(pose.position.y))

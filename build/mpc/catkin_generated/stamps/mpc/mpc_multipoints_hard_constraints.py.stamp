@@ -227,7 +227,7 @@ if __name__ == '__main__':
         # Frame=frame_image()
         T = 0.15# sampling time [s]
         N = 40 # prediction horizon
-        un= 3 # control step
+        un= 5 # control step
         v_max = 0.015
         omega_max = 0.5
         rate = rospy.Rate(10)
@@ -278,17 +278,18 @@ if __name__ == '__main__':
 
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
-        Q = 0.1*np.eye(2*N_target)
+        Q = 1*np.eye(2*N_target)
         R=0.0001*np.eye(4)
-        Qr=0.01*np.eye(2)
+        Qr=0.05*np.eye(2)
         #### cost function
         obj = 0 #### cost
         for i in range(N):
             #without angle error
             #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
-            obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
-                +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
+            # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
+            #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
+            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/5-P[-2*N_target-2:-2*N_target].T).T])
 
  
         lbx = []
@@ -324,11 +325,17 @@ if __name__ == '__main__':
         model_error_y=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
+        r_object=28
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
                 # object pick hard constraint
-                if object_flag==0:
-                    Target_circle=[Robot.robotx[5], Robot.roboty[5],38* 1.5037594e-3]
+                if object_flag==0 and Robot.robotx[5]!=0:
+                
+                    Target_circle=np.array([Robot.robotx[5], Robot.roboty[5],r_object* 1.5037594e-3])
+                    xs=[]
+                    for i in range(N_target+2):
+                        xs.append(Target_circle[:2])
+                    xs=np.array(xs).reshape(-1,1)
                     object_flag=1
                 if object_flag==1:
                     g = [] # equal constrains
@@ -345,9 +352,33 @@ if __name__ == '__main__':
                                 lbg.append(30* 1.5037594e-3)
                                 ubg.append(450* 1.5037594e-3)
                     for i in range(N+1):
+                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
+                        # lbg.append(0)
+                        # ubg.append(1000000)
+                        g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
+                        lbg.append(0.8)
+                        ubg.append(1)
+                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),-X[i,8:10]+X[i,6:8]))
+                        # lbg.append(0)
+                        # ubg.append(1000000)
+                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),-X[i,8:10]+X[i,10:12]))
+                        # lbg.append(0)
+                        # ubg.append(1000000)
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
                         lbg.append(L*0.4)
                         ubg.append(L*0.9)
+                        # g.append(ca.norm_2(X[i,:2]-X[i,6:8]))
+                        # lbg.append(L*0.10)
+                        # ubg.append(L*0.35)
+                        # g.append(ca.norm_2(X[i,6:8]-X[i,8:10]))
+                        # lbg.append(L*0.10)
+                        # ubg.append(L*0.35)
+                        # g.append(ca.norm_2(X[i,10:12]-X[i,8:10]))
+                        # lbg.append(L*0.10)
+                        # ubg.append(L*0.35)
+                        # g.append(ca.norm_2(X[i,10:12]-X[i,3:5]))
+                        # lbg.append(L*0.15)
+                        # ubg.append(L*0.35)
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
                         lbg.append(Target_circle[2]*2)
@@ -386,15 +417,22 @@ if __name__ == '__main__':
                             x0.append(feature.feature_point.points[xk].x)
                             x0.append(feature.feature_point.points[xk].y)
                     x0=np.array(x0).reshape(-1,1)
+                    x1=np.concatenate(x0)
                     if x_next is not None:
                         model_error_x.append(x_next[8][0]-x0[8][0])
                         model_error_y.append(x_next[9][0]-x0[9][0])
                         model_errorplot.on_running(model_error_x,model_error_y)
                     # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
-                    ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
-                    for i in range(1,N_target,1):
-                        ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
-                    if ee[0]>0.025 or ee[1]>0.025 or ee[2]>0.025:
+                    # ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
+                    
+                    # for i in range(1,N_target,1):
+                    #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
+                    x_center=x0[:2]+x0[3:5]
+                    for i in range(N_target):
+                        x_center=x_center+x0[6+2*i:8+2*i]
+                    x_center=(x_center/(N_target+2)).reshape(1,-1)
+                    # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
+                    if np.linalg.norm(x_center[0]-Target_circle[:2])>0.02:
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)
