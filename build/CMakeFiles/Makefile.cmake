@@ -68,6 +68,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/romi/workspace/src/mpc/scripts/mpc_multipoints_hard_constraints.py"
   "/home/romi/workspace/src/mpc/scripts/mpc_single.py"
   "/home/romi/workspace/src/mpc/scripts/mpc_two.py"
+  "/home/romi/workspace/src/mpc/scripts/mpc_updateJ.py"
   "/home/romi/workspace/src/robot_mag/CMakeLists.txt"
   "/home/romi/workspace/src/robot_mag/package.xml"
   "/home/romi/workspace/src/starlaunch/CMakeLists.txt"

@@ -289,7 +289,7 @@ if __name__ == '__main__':
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
             #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
-            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/5-P[-2*N_target-2:-2*N_target].T).T])
+            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])
 
  
         lbx = []
@@ -325,7 +325,7 @@ if __name__ == '__main__':
         model_error_y=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
-        r_object=28
+        r_object=30
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
                 # object pick hard constraint
@@ -381,26 +381,26 @@ if __name__ == '__main__':
                         # ubg.append(L*0.35)
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2)
+                        lbg.append(Target_circle[2]*2.1)
                         ubg.append(200)
                         g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2)
+                        lbg.append(Target_circle[2]*2.1)
                         ubg.append(200)
                         for j in range(N_target):
                             g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
-                            lbg.append(Target_circle[2]*1.1)
+                            lbg.append(Target_circle[2]*1.2)
                             ubg.append(200)
                         g.append(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.1)
+                        lbg.append(Target_circle[2]*1.2)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,6:8].T+X[i,8:10].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.1)
+                        lbg.append(Target_circle[2]*1.2)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,8:10].T+X[i,10:12].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.1)
+                        lbg.append(Target_circle[2]*1.2)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.1)
+                        lbg.append(Target_circle[2]*1.2)
                         ubg.append(200)
                     nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -427,12 +427,13 @@ if __name__ == '__main__':
                     
                     # for i in range(1,N_target,1):
                     #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
-                    x_center=x0[:2]+x0[3:5]
-                    for i in range(N_target):
+                    # x_center=x0[:2]+x0[3:5]
+                    x_center=x0[6:8]
+                    for i in range(1,N_target):
                         x_center=x_center+x0[6+2*i:8+2*i]
-                    x_center=(x_center/(N_target+2)).reshape(1,-1)
+                    x_center=(x_center/(N_target)).reshape(1,-1)
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
-                    if np.linalg.norm(x_center[0]-Target_circle[:2])>0.02:
+                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*1.3 :
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)

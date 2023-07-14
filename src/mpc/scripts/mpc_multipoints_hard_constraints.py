@@ -281,15 +281,7 @@ if __name__ == '__main__':
         Q = 1*np.eye(2*N_target)
         R=0.0001*np.eye(4)
         Qr=0.05*np.eye(2)
-        #### cost function
-        obj = 0 #### cost
-        for i in range(N):
-            #without angle error
-            #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
-            # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
-            # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
-            #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
-            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])
+       
 
  
         lbx = []
@@ -337,6 +329,16 @@ if __name__ == '__main__':
                         xs.append(Target_circle[:2])
                     xs=np.array(xs).reshape(-1,1)
                     object_flag=1
+                     #### cost function
+                    obj = 0 #### cost
+                    for i in range(N):
+                        #without angle error
+                        #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
+                        # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
+                        # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
+                        #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
+                        obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])-\
+                            1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
                 if object_flag==1:
                     g = [] # equal constrains
                     lbg = []
@@ -355,9 +357,9 @@ if __name__ == '__main__':
                         # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
                         # lbg.append(0)
                         # ubg.append(1000000)
-                        g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
-                        lbg.append(0.8)
-                        ubg.append(1)
+                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
+                        # lbg.append(0.8)
+                        # ubg.append(1)
                         # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),-X[i,8:10]+X[i,6:8]))
                         # lbg.append(0)
                         # ubg.append(1000000)
@@ -386,22 +388,24 @@ if __name__ == '__main__':
                         g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
                         lbg.append(Target_circle[2]*2.1)
                         ubg.append(200)
+                        ddp=1.4
                         for j in range(N_target):
                             g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
-                            lbg.append(Target_circle[2]*1.2)
+                            lbg.append(Target_circle[2]*ddp)
                             ubg.append(200)
                         g.append(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.2)
+                        lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,6:8].T+X[i,8:10].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.2)
+                        lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,8:10].T+X[i,10:12].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.2)
+                        lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
                         g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*1.2)
+                        lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
+
                     nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                     solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
@@ -433,7 +437,7 @@ if __name__ == '__main__':
                         x_center=x_center+x0[6+2*i:8+2*i]
                     x_center=(x_center/(N_target)).reshape(1,-1)
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
-                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*1.3 :
+                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.9 :
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)

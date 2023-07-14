@@ -6,6 +6,7 @@
 	<!-- <node pkg="mpc" type="mpc_multipoints.py" name="mpc_multipoints" output="screen"/> -->
 	<!-- <node pkg="mpc" type="Jmatrix.py" name="Jmatrix" output="screen"/> -->
 	<node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/> 
+	<!-- <node pkg="mpc" type="mpc_updateJ.py" name="mpc_updateJ" output="screen"/>  -->
 
 	<!-- <node pkg="co_transform" type="tf_listener.py" name="tf_listener" output="screen"/>
 	<node pkg="co_transform" type="low_pass_filter.py" name="low_pass_filter" output="screen"/>

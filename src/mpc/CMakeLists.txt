@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/Jmatrix.py
   scripts/mpc_single.py
   scripts/mpc_two.py
+  scripts/mpc_updateJ.py
   scripts/Dynamicupdateplot.py
   scripts/mpc_multipoints.py
   scripts/Jmatrix_Bezier.py

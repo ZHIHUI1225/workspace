@@ -367,7 +367,7 @@ if __name__ == '__main__':
         flag=0
         while not rospy.is_shutdown() :
             if Frame.image is not None and flag==0:
-                wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 10, (1229-63,520-44), True)
+                wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 20, (1229-63,520-44), True)
                 flag=1
             if  RedPoints.points.poses and Frame.image is not None:
                 # robot2_local=tf_w2l.transform(robot2.p)
