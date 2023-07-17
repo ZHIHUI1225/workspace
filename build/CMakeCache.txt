@@ -540,6 +540,18 @@ nav_msgs_DIR:PATH=/opt/ros/noetic/share/nav_msgs/cmake
 pluginlib_DIR:PATH=/opt/ros/noetic/share/pluginlib/cmake
 
 //Value Computed by CMake
+pulling_BINARY_DIR:STATIC=/home/romi/workspace/build/pulling
+
+//Value Computed by CMake
+pulling_SOURCE_DIR:STATIC=/home/romi/workspace/src/pulling
+
+//Value Computed by CMake
+record_BINARY_DIR:STATIC=/home/romi/workspace/build/record
+
+//Value Computed by CMake
+record_SOURCE_DIR:STATIC=/home/romi/workspace/src/record
+
+//Value Computed by CMake
 robot_msg_BINARY_DIR:STATIC=/home/romi/workspace/build/robot_mag
 
 //The directory containing a CMake configuration file for robot_msg.
@@ -768,7 +780,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=12
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=14
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

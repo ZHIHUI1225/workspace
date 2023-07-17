@@ -346,9 +346,9 @@ if __name__ == '__main__':
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
             # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
             #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
-            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])
-
- 
+            # obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])
+            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2*N_target-2:-2*N_target].T).T])-\
+                1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
         lbx = []
         ubx = []
         for _ in range(N):

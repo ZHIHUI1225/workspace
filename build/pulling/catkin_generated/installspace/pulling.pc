@@ -1,0 +1,8 @@
+prefix=/home/romi/workspace/install
+
+Name: pulling
+Description: Description of pulling
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -59,6 +59,8 @@ all: starlaunch/all
 all: beginner_tutorials/all
 all: co_transform/all
 all: mpc/all
+all: pulling/all
+all: record/all
 all: camera_drive/all
 all: agent_position/all
 all: learning_tf/all
@@ -72,6 +74,8 @@ preinstall: starlaunch/preinstall
 preinstall: beginner_tutorials/preinstall
 preinstall: co_transform/preinstall
 preinstall: mpc/preinstall
+preinstall: pulling/preinstall
+preinstall: record/preinstall
 preinstall: camera_drive/preinstall
 preinstall: agent_position/preinstall
 preinstall: learning_tf/preinstall
@@ -90,6 +94,8 @@ clean: starlaunch/clean
 clean: beginner_tutorials/clean
 clean: co_transform/clean
 clean: mpc/clean
+clean: pulling/clean
+clean: record/clean
 clean: camera_drive/clean
 clean: agent_position/clean
 clean: learning_tf/clean
@@ -318,6 +324,42 @@ mpc/preinstall:
 mpc/clean:
 
 .PHONY : mpc/clean
+
+#=============================================================================
+# Directory level rules for directory pulling
+
+# Recursive "all" directory target.
+pulling/all:
+
+.PHONY : pulling/all
+
+# Recursive "preinstall" directory target.
+pulling/preinstall:
+
+.PHONY : pulling/preinstall
+
+# Recursive "clean" directory target.
+pulling/clean:
+
+.PHONY : pulling/clean
+
+#=============================================================================
+# Directory level rules for directory record
+
+# Recursive "all" directory target.
+record/all:
+
+.PHONY : record/all
+
+# Recursive "preinstall" directory target.
+record/preinstall:
+
+.PHONY : record/preinstall
+
+# Recursive "clean" directory target.
+record/clean:
+
+.PHONY : record/clean
 
 #=============================================================================
 # Directory level rules for directory robot_mag

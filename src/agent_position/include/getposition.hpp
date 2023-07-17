@@ -232,6 +232,8 @@ class Visualize //速度控制类
 					}	
 			}
 		}
+	Point center(500,200);
+	circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
 	robot_pub_.publish(robot_array_new);
 	Mat imgAddMask = frame_cut.clone();
 	imgAddMask .setTo(255, Mask1);
@@ -281,98 +283,98 @@ for (auto point : red_points.points) {
 	bitwise_not(imgAddMask1,thre_inv);
 	// imshow("thre_inv",thre_inv);
 	//连通域
-	RNG rng(10086);
-	Mat outr;
-	int number = connectedComponents(thre_inv, outr, 8, CV_16U);  //统计图像中连通域的个数
+	// RNG rng(10086);
+	// Mat outr;
+	// int number = connectedComponents(thre_inv, outr, 8, CV_16U);  //统计图像中连通域的个数
 
-	// 计算每个连通组件的大小
-	std::vector<int> sizes(number, 0);
-	for (int i = 0; i < outr.rows; i++) {
-		for (int j = 0; j < outr.cols; j++) {
-			int label = outr.at<uint16_t>(i, j);
+	// // 计算每个连通组件的大小
+	// std::vector<int> sizes(number, 0);
+	// for (int i = 0; i < outr.rows; i++) {
+	// 	for (int j = 0; j < outr.cols; j++) {
+	// 		int label = outr.at<uint16_t>(i, j);
 		
-			if (label > 0) {
-				sizes[label] += 1;
-				//  cout<<"label"<<label<<endl;
-			}
-		}
-	}
+	// 		if (label > 0) {
+	// 			sizes[label] += 1;
+	// 			//  cout<<"label"<<label<<endl;
+	// 		}
+	// 	}
+	// }
 
-	// 找到最大的连通组件
-	int max_label = 1;
-	int max_size = sizes[1];
-	for (int i = 2; i <number; ++i) {
-		if (sizes[i] > max_size) {
-			max_label = i;
-			max_size = sizes[i];
-		}
-	}
+	// // 找到最大的连通组件
+	// int max_label = 1;
+	// int max_size = sizes[1];
+	// for (int i = 2; i <number; ++i) {
+	// 	if (sizes[i] > max_size) {
+	// 		max_label = i;
+	// 		max_size = sizes[i];
+	// 	}
+	// }
 
 
-	Mat connect = Mat::zeros(thre.size(), frame_cut.type());
-	int w = connect.cols;
-	int h = connect.rows;
-	Vec3b color=Vec3b(rng.uniform(0,256),rng.uniform(0,256),rng.uniform(0,256));
-	// sensor_msgs::PointCloud pc_without_QR_;
-	for (int row = 0; row < h; row++)
-	{
-		for (int col = 0; col < w; col++)
-		{
-			int label = outr.at<uint16_t>(row, col);
-			geometry_msgs::Point32 p;
-			if (label == max_label)  
-			{
-				connect.at<Vec3b>(row, col)=color;
-				p.x=col;
-				p.y=row;
-				p.z=0;
-				// pc_without_QR_.points.push_back(p);	
-			}
-		}
-	}
-	  //骨干提取
-      Mat skel = skeletonization(connect);
-    	// imshow("Skeleton Image", skel);
-        //曲线拟合
-        //输入拟合点
-        std::vector<cv::Point> points;
-		sensor_msgs::PointCloud pc_without_QR_;
-        int rowmin=h;
-        int colmin=w;
-        int colmax=0;
-        for (int col = 0; col < w; col++)
-        {
-            for (int row = 0; row < h; row++)
-            {
-                if (connect.at<Vec3b>(row, col) == color)  
-				// if (skel.at<uchar>(row, col) == 255) 
-                {
-					geometry_msgs::Point32 p;
-                    points.push_back(cv::Point(col, row));
-					p.x=col;
-					p.y=row;
-					p.z=0;
-					pc_without_QR_.points.push_back(p);
-                    if (row<rowmin)
-                    {
-                        rowmin=row;
-                    }
-                    if(col<colmin)
-                    {
-                        colmin=col;
-                    }
-                    if(col>colmax)
-                    {
-                        colmax=col;
-                    }
-                }
+	// Mat connect = Mat::zeros(thre.size(), frame_cut.type());
+	// int w = connect.cols;
+	// int h = connect.rows;
+	// Vec3b color=Vec3b(rng.uniform(0,256),rng.uniform(0,256),rng.uniform(0,256));
+	// // sensor_msgs::PointCloud pc_without_QR_;
+	// for (int row = 0; row < h; row++)
+	// {
+	// 	for (int col = 0; col < w; col++)
+	// 	{
+	// 		int label = outr.at<uint16_t>(row, col);
+	// 		geometry_msgs::Point32 p;
+	// 		if (label == max_label)  
+	// 		{
+	// 			connect.at<Vec3b>(row, col)=color;
+	// 			p.x=col;
+	// 			p.y=row;
+	// 			p.z=0;
+	// 			// pc_without_QR_.points.push_back(p);	
+	// 		}
+	// 	}
+	// }
+	//   //骨干提取
+    //   Mat skel = skeletonization(connect);
+    // 	// imshow("Skeleton Image", skel);
+    //     //曲线拟合
+    //     //输入拟合点
+    //     std::vector<cv::Point> points;
+	// 	sensor_msgs::PointCloud pc_without_QR_;
+    //     int rowmin=h;
+    //     int colmin=w;
+    //     int colmax=0;
+    //     for (int col = 0; col < w; col++)
+    //     {
+    //         for (int row = 0; row < h; row++)
+    //         {
+    //             if (connect.at<Vec3b>(row, col) == color)  
+	// 			// if (skel.at<uchar>(row, col) == 255) 
+    //             {
+	// 				geometry_msgs::Point32 p;
+    //                 points.push_back(cv::Point(col, row));
+	// 				p.x=col;
+	// 				p.y=row;
+	// 				p.z=0;
+	// 				pc_without_QR_.points.push_back(p);
+    //                 if (row<rowmin)
+    //                 {
+    //                     rowmin=row;
+    //                 }
+    //                 if(col<colmin)
+    //                 {
+    //                     colmin=col;
+    //                 }
+    //                 if(col>colmax)
+    //                 {
+    //                     colmax=col;
+    //                 }
+    //             }
                 
-            }
-        }
-		line_without_QR_pub.publish(pc_without_QR_);
-		cv::Mat A;
-        int Num=6;
-        polynomial_curve_fit(points, Num, A);
+    //         }
+    //     }
+	// 	line_without_QR_pub.publish(pc_without_QR_);
+	// 	cv::Mat A;
+    //     int Num=6;
+    //     polynomial_curve_fit(points, Num, A);
         //std::cout << "A = " << A << std::endl;
         //计算曲线拟合的点
         // std::vector<cv::Point> points_fitted;
@@ -390,21 +392,21 @@ for (auto point : red_points.points) {
         //     // cv::circle(frame, center, 3, cv::Scalar(0, 255, 255), -1);
         // }
 
-		int k=0;
-		std::vector<cv::Point>  pc_10;
-		for (int i = 1; i < points.size(); ++i)
-		{
-		double l = hypot(points[k].x - points[i].x, points[k].y - points[i].y);
-		if (l > 5.0) { 
-			Point2d ipt;
-			ipt.x=points[k].x;
-			ipt.y=points[k].y;
-			pc_10.push_back(ipt);
-			k = i;
-			Point center(cvRound(ipt.x), cvRound(ipt.y));
-            // cv::circle(frame_cut, center, 3, cv::Scalar(0, 0, 255), -1);
-		}
-		}
+		// int k=0;
+		// std::vector<cv::Point>  pc_10;
+		// for (int i = 1; i < points.size(); ++i)
+		// {
+		// double l = hypot(points[k].x - points[i].x, points[k].y - points[i].y);
+		// if (l > 5.0) { 
+		// 	Point2d ipt;
+		// 	ipt.x=points[k].x;
+		// 	ipt.y=points[k].y;
+		// 	pc_10.push_back(ipt);
+		// 	k = i;
+		// 	Point center(cvRound(ipt.x), cvRound(ipt.y));
+        //     // cv::circle(frame_cut, center, 3, cv::Scalar(0, 0, 255), -1);
+		// }
+		// }
 		imshow("points",frame_cut);
 		waitKey(3);
 	}

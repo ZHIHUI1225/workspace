@@ -1,2 +1,2 @@
-agent_position:beginner_tutorials:camera_drive:co_transform:learning_tf:mpc:robot_mag:starlaunch
+agent_position:beginner_tutorials:camera_drive:co_transform:learning_tf:mpc:pulling:record:robot_mag:starlaunch
 -DCATKIN_DEVEL_PREFIX=/home/romi/workspace/devel -DCMAKE_INSTALL_PREFIX=/home/romi/workspace/install -G Unix Makefiles

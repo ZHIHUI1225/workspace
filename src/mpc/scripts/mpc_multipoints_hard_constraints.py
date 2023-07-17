@@ -317,7 +317,7 @@ if __name__ == '__main__':
         model_error_y=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
-        r_object=30
+        r_object=35
         while not rospy.is_shutdown():
             if Robot.flag==1 and feature.middlepoint.x!=0:
                 # object pick hard constraint

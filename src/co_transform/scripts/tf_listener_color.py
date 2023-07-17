@@ -163,7 +163,7 @@ class frame_image():
         self.image=None
         self.br = CvBridge()
         # Node cycle rate (in Hz).
-        self.loop_rate = rospy.Rate(30)
+        self.loop_rate = rospy.Rate(50)
         # Subscribers
         rospy.Subscriber('/camera/image',Image,self.image_callback,queue_size=10)
 
