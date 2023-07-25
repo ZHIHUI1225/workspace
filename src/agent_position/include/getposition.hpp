@@ -179,52 +179,46 @@ class Visualize //速度控制类
 	cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.05, cameraMatrix, distCoeffs, rvecs, tvecs);
 	double deltax;
 	double deltay;
+	double xnew;
+	double ynew;
 		if (markerIds.size() > 0) 
 		{	cv::aruco::drawDetectedMarkers(frame_cut, markerCorners, markerIds);
 			for (int i = 0; i < rvecs.size(); ++i) {
 				//cv::aruco::drawAxis(frame, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], 0.1);
 				robot_msg::robot_pose robot_new;			
 				robot_new.ID.data = markerIds[i];
-				robot_new.position.x = (markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
-				robot_new.position.y = (markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
-				robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
-				robot_array_new.robot_pose_array.push_back(robot_new);
+				xnew=(markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
+				ynew=(markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
+				
 				if (markerIds[i]>10 && markerIds[i]<13){
 					//读取圆心
-					deltax=20+(44-robot_new.position.x)/25.65;
-					deltay=7+(32-robot_new.position.y)/29.71;
-					Point center(cvRound(robot_new.position.x +deltax), cvRound(robot_new.position.y+deltay));
+					// deltax=20+(44-robot_new.position.x)/25.65;
+					// deltay=7+(32-robot_new.position.y)/29.71;
+					deltax=20+(44-xnew)/25.65;
+					deltay=7+(32-ynew)/29.71;
+					robot_new.position.x = xnew+deltax;
+					robot_new.position.y = ynew+deltay;
+					robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
+					robot_array_new.robot_pose_array.push_back(robot_new);
+					Point center(cvRound(robot_new.position.x ), cvRound(robot_new.position.y));
 					//读取半径
-					int radius = cvRound(38);
-					// // cv:: Mat circlemask=extractCircularMask(gray,center, radius) ;
-					// // Mat imgAddMask = gray.clone();
-					// // cv::add(circlemask,gray,imgAddMask);
-					// // cv::imshow("imgAddMask",imgAddMask);
-					// vector<Vec3f> circles;
-    				// HoughCircles(thre, circles, HOUGH_GRADIENT, 1,
-                	//  70, 100, 90, 20, 40);
-					// for( size_t i = 0; i < circles.size(); i++ )
-					// 	{
-					// 		Vec3i c = circles[i];
-					// 		Point center = Point(c[0], c[1]);
-					// 		// circle center
-					// 		circle(frame_cut, center, 1, Scalar(0,100,100), 3, LINE_AA);
-					// 		// circle outline
-					// 		int radius = c[2];
-					// 		circle(frame_cut, center, radius, Scalar(255,0,255), 3, LINE_AA);
-					// 		circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
-					// 	}
+					int radius = cvRound(40);
 					//绘制圆
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
 					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
 					}
 					if (markerIds[i]<10){
 					//读取圆心
-					deltax=20+(44-robot_new.position.x)/25.65;
-					deltay=7+(32-robot_new.position.y)/29.71;
-					Point center(cvRound(robot_new.position.x +deltax), cvRound(robot_new.position.y+deltay));
+					// deltax=8-16/1062*(xnew-66);
+					deltax=8-(xnew-43)/58.375;
+					deltay=7+(32-ynew)/29.71;
+					robot_new.position.x = xnew+deltax;
+					robot_new.position.y = ynew+deltay;
+					robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
+					robot_array_new.robot_pose_array.push_back(robot_new);
+					Point center(cvRound(robot_new.position.x ), cvRound(robot_new.position.y));
 					//读取半径
-					int radius = cvRound(28);
+					int radius = cvRound(32);
 					// cv::imshow("cicle",frame_cut);
 					//绘制圆
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
@@ -232,8 +226,8 @@ class Visualize //速度控制类
 					}	
 			}
 		}
-	Point center(500,200);
-	circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
+	// Point center(500,200);
+	// circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
 	robot_pub_.publish(robot_array_new);
 	Mat imgAddMask = frame_cut.clone();
 	imgAddMask .setTo(255, Mask1);
@@ -242,8 +236,8 @@ class Visualize //速度控制类
     cv::Mat hsv_frame;
     cv::cvtColor(imgAddMask, hsv_frame, cv::COLOR_BGR2HSV);
 	
-    cv::Scalar low_red = cv::Scalar(0,45, 10);
-    cv::Scalar high_red = cv::Scalar(20, 150, 150);
+    cv::Scalar low_red = cv::Scalar(0,45, 20);
+    cv::Scalar high_red = cv::Scalar(20, 200, 200);
 
     cv::Mat red_mask;
     cv::inRange(hsv_frame, low_red, high_red, red_mask);

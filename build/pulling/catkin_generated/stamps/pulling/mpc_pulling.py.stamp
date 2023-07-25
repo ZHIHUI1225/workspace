@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # use the Aruco code  detect the tube feature points
 import rospy
+from std_msgs.msg import Int8
+from std_msgs.msg import Bool
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 from geometry_msgs.msg import Pose,PoseArray,PoseStamped
@@ -94,14 +96,15 @@ def my_func(x):
 class Jmatrix():
     def __init__(self,P:int):
         self.J=np.array([[0.5,0,0.5,0],[0,0.5,0,0.5]])
+        # self.J=np.array([[5,1,5,1],[1,5,1,5]])
         self.p1=np.array((2,1))
         self.p2=np.array((2,1))
-        self.e=0.00003 #error
+        self.e=1e-6 #error
         self.j=0
         self.points=np.array((P,1))
         self.datanumber=10 # the number of save date
-        self.xdata=np.zeros((self.datanumber,4))
-        self.ydata=np.zeros((self.datanumber,P))
+        self.xdata=np.zeros((1,4))
+        self.ydata=np.zeros((1,P))
     
     def initialJ(self,r1,r2,points):
         self.p1=r1
@@ -109,7 +112,7 @@ class Jmatrix():
         self.points=points 
 
     def unpdateJ(self,p1,p2,xtn):
-        gamma=0.000005
+        gamma=1
         deltap=np.concatenate(((p1-self.p1).reshape(1,2),(p2-self.p2).reshape(1,2)), axis=1)
         self.p1=p1
         self.p2=p2
@@ -119,17 +122,41 @@ class Jmatrix():
         #delta s
         delta_t=xtn-self.points
         self.points=xtn
-        for i in range(len(self.points)):
-            self.j=LA.norm(np.dot(deltap.reshape(1,4),self.J[i,:].reshape(4,1))-delta_t[i])**2/2+LA.norm(np.dot(self.xdata,self.J[i,:].reshape(4,1))-self.ydata[:,i].reshape(self.datanumber,1))**2/2
-            if self.j>self.e:
-                qn=self.J[i,:].reshape(4,1)\
-                -gamma*(np.dot(self.xdata.T,np.dot(self.xdata,self.J[i,:].reshape(4,1))-self.ydata[:,i].reshape(self.datanumber,1))+np.dot(deltap.reshape(4,1),np.dot(deltap.reshape(1,4),self.J[i,:].reshape(4,1))-delta_t[i]).reshape(4,1))
-                self.J[i,:]=qn.reshape(1,4)
-        # update R
-        self.xdata=np.vstack((self.xdata[len(deltap):,:],deltap))
-         #update delta
-        self.ydata=np.vstack((self.ydata[len(delta_t.T):,:],delta_t.T))
+        if LA.norm(deltap)!=0 and LA.norm(delta_t)!=0:
+            for i in range(len(self.points)):
+                self.j=LA.norm(np.dot(deltap.reshape(1,4),self.J[i,:].reshape(4,1))-delta_t[i])**2/2+LA.norm(np.dot(self.xdata,self.J[i,:].reshape(4,1))-self.ydata[:,i].reshape(-1,1))**2/2
+                if self.j>self.e:
+                    qn=self.J[i,:].reshape(4,1)\
+                    -gamma*(np.dot(self.xdata.T,np.dot(self.xdata,self.J[i,:].reshape(4,1))-self.ydata[:,i].reshape(-1,1))+np.dot(deltap.reshape(4,1),np.dot(deltap.reshape(1,4),self.J[i,:].reshape(4,1))-delta_t[i]).reshape(4,1))
+                    self.J[i,:]=qn.reshape(1,4)
+            # update R
+            self.xdata=np.vstack((self.xdata[len(deltap):,:],deltap))
+            #update delta
+            self.ydata=np.vstack((self.ydata[len(delta_t.T):,:],delta_t.T))
 
+class Targetzone():
+    def __init__(self):
+        self.target=Point32()
+        self.flag=0
+        rospy.Subscriber('Targetzone',Point32,self.Callback,queue_size=10)
+    def Callback(self,msg):
+        self.target=msg
+        self.flag=1
+
+class Targe_ID:
+    def __init__(self):
+        self.flag=False
+        self.enclose_flag=False
+        self.ID=0
+        self.sub=rospy.Subscriber('goflag',Bool,self.flag_callback,queue_size=10)
+        self.enclose_sub=rospy.Subscriber('encloseflag',Bool,self.enclose_flag_callback,queue_size=10)
+        self.subID=rospy.Subscriber('TargetID',Int8,self.ID_callback,queue_size=10)
+    def flag_callback(self,msg):
+        self.flag=msg.data
+    def enclose_flag_callback(self,msg):
+        self.enclose_flag=msg.data
+    def ID_callback(self,msg):
+        self.ID=int(msg.data)
 
 class PlotUpdate():
     #Suppose we know the x range
@@ -185,6 +212,7 @@ def carotationR(x0):
     O=x0[6:8].T
     return [R,O]
 
+
 # generate FF
 def gene_ff(X,U,P,f,J):
     ### define
@@ -206,14 +234,16 @@ if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
-        Targetzone_pub=rospy.Publisher('Targetzone',Point32,queue_size=10)
+        transport_flag_pub=rospy.Publisher('transportflag',Bool,queue_size=10)
+        Targe_id=Targe_ID()
+        Targe_zone=Targetzone()
         vel = [0]*2
         Robot = QRrobot()
         model_errorplot=PlotUpdate(1)
         JM=Jmatrix(P=N_target*2)
         # Frame=frame_image()
         T = 0.15# sampling time [s]
-        N = 40 # prediction horizon
+        N = 30 # prediction horizon
         un= 5 # control step
         v_max = 0.015
         omega_max = 0.5
@@ -250,21 +280,22 @@ if __name__ == '__main__':
         Q = 1*np.eye(2*N_target)
         R=0.0001*np.eye(4)
         Qr=0.05*np.eye(2)
+        Qr[1,1]=0
         
         #### cost function
         obj = 0 #### cost
         for i in range(N):
-            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([X[i,6:8]-P[-2:].T,Qr,(X[i,6:8]-P[-2:].T).T])
+            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([X[i,-2:]-P[-2:].T,Qr,(X[i,-2:]-P[-2:].T).T])
         lbx = []
         ubx = []
         for _ in range(N):
-            lbx.append(0)
+            lbx.append(-v_max)
             ubx.append(v_max)
         for _ in range(N):
             lbx.append(-omega_max)
             ubx.append(omega_max)
         for _ in range(N):
-            lbx.append(0)
+            lbx.append(-v_max)
             ubx.append(v_max)
         for _ in range(N):
             lbx.append(-omega_max)
@@ -281,11 +312,17 @@ if __name__ == '__main__':
         object_flag=0
         r_object=35
         flag=0
+        transport_flag=False
+        transport_flag_pub.publish(transport_flag)
         while not rospy.is_shutdown():
-            if Robot.flag==1 :
+            if Targe_id.flag is True:
+                transport_flag=False
+                transport_flag_pub.publish(transport_flag)
+            #state 10
+            if Robot.flag==1 and Targe_zone.flag==1 and Targe_id.enclose_flag is True and transport_flag is False:
                 # object pick hard constraint
-                if object_flag==0 and Robot.robotx[5]!=0:
-                    Target_circle=np.array([500*1.5037594e-3, 200*1.5306122e-3, r_object* 1.5037594e-3])
+                if object_flag==0 and Targe_id.ID!=0:
+                    Target_circle=np.array([Targe_zone.target.x*1.05, Targe_zone.target.y*1.1,Targe_zone.target.z])
                     xs=[]
                     for i in range(N_target):
                         xs.append(Target_circle[:2])
@@ -299,7 +336,7 @@ if __name__ == '__main__':
                             if j%3==0:
                                 g.append(X[i, j])
                                 lbg.append(30*1.5306122e-3)
-                                ubg.append(1200*1.5306122e-3 )
+                                ubg.append(1100*1.5306122e-3 )
                                 # ubg.append(1100*1.5306122e-3 )
                             if j%3==1:
                                 g.append(X[i, j])
@@ -311,32 +348,42 @@ if __name__ == '__main__':
                         ubg.append(L*0.8)
                     for i in range(N):
                         [M,O]=carotationR(X[i,:])
-                        b=ca.mtimes(M,X[i,3:5].T)-ca.mtimes(M,O)
-                        # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
-                        Kb=ca.fabs(b[1]/b[0])
-                        a=ca.mtimes(M,X[i,:2].T)-ca.mtimes(M,O)
-                        # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
-                        Ka=ca.fabs(a[1]/a[0])
+                        # b=ca.mtimes(M,X[i,3:5].T)-ca.mtimes(M,O)
+                        # # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
+                        # Kb=ca.fabs(b[1]/b[0])
+                        # a=ca.mtimes(M,X[i,:2].T)-ca.mtimes(M,O)
+                        # # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
+                        # Ka=ca.fabs(a[1]/a[0])
                         Xnew[i,:]=(ca.mtimes(M,(X[i+1,6:8]).T)).T-ca.mtimes(M,O).T
-                        # g.append(ca.fabs(Xnew[i,0])-(Xnew[i,1]/Kb))
-                        # lbg.append(-100)
-                        # ubg.append(0)
-                        # g.append(ca.fabs(Xnew[i,0])-(Xnew[i,1]/Ka))
-                        # lbg.append(-100)
-                        # ubg.append(0)
                         g.append(Xnew[i,0])
                         lbg.append(-1)
                         ubg.append(1)
                         g.append(Xnew[i,1])
                         lbg.append(0)
                         ubg.append(1)
+                    for a in range(len(Robot.robotID)):
+                        if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
+                            C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
+                            for i in range(N+1):
+                                g.append(ca.norm_2(X[i,:2].T-C[:2]))
+                                lbg.append(C[2]*2.1)
+                                ubg.append(200)
+                                g.append(ca.norm_2(X[i,3:5].T-C[:2]))
+                                lbg.append(C[2]*2.1)
+                                ubg.append(200)
+                                ddp=1.3
+                                for j in range(N_target):
+                                    # g.append(ca.norm_2((X[i,:2].T+X[i,3:5].T+X[i,-2:].T)/3-C[:2]))
+                                    g.append(ca.norm_2(X[i,-2:].T-C[:2]))
+                                    lbg.append(C[2]*3)
+                                    ubg.append(200)
 
                     r1=np.array([[Robot.robotx[0]],[Robot.roboty[0]]])
                     r2=np.array([[Robot.robotx[1]],[Robot.roboty[1]]])
                     points=[]
-                    for xk in range(N_target):
-                            points.append(Robot.robotx[5])
-                            points.append(Robot.roboty[5])
+                    IDi=Targe_id.ID-1
+                    points.append(Robot.robotx[IDi])
+                    points.append(Robot.roboty[IDi])
                     points=np.array(points).reshape(-1,1)
                     JM.initialJ(r1,r2,points)
                     object_flag=1
@@ -344,17 +391,12 @@ if __name__ == '__main__':
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                     solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
 
-                if object_flag==1:
-                    # Create Point32 message
-                    point = Point32()
-                    point.x = Target_circle[0]/1.5037594e-3
-                    point.y = Target_circle[1]/1.5306122e-3
-                    point.z = Target_circle[2]/1.5037594e-3
-                    Targetzone_pub.publish(point)
+                if object_flag==1 and Targe_id.ID!=0:
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
                     x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
-                    x0.append(Robot.robotx[5])
-                    x0.append(Robot.roboty[5])
+                    IDi=int(Targe_id.ID-1)
+                    x0.append(Robot.robotx[IDi])
+                    x0.append(Robot.roboty[IDi])
                     x0=np.array(x0).reshape(-1,1)
                     x1=np.concatenate(x0)
                     if x_next is not None:
@@ -369,7 +411,11 @@ if __name__ == '__main__':
                     # x_center=x0[:2]+x0[3:5]
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
-                    if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
+                    # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
+                    # if  x_center[0]>Target_circle[0] or x_center[1]>Target_circle[1]:
+                    if  x_center[0]<Target_circle[0]:
+                        transport_flag=False
+                        transport_flag_pub.publish(transport_flag)
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)
@@ -397,6 +443,10 @@ if __name__ == '__main__':
                         pub.publish(vel_msg)
                         d = rospy.Duration(0.05)
                         rospy.sleep(d)
+                    else:
+                        object_flag=0
+                        transport_flag=True
+                        transport_flag_pub.publish(transport_flag)
 
     except rospy.ROSInterruptException:
         pass

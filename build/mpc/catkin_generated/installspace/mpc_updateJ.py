@@ -388,9 +388,9 @@ if __name__ == '__main__':
             if Robot.flag==1 and feature.flag==1:
                 # object pick hard constraint
                 if object_flag==0 and Robot.robotx[5]!=0:
-                    deltax=20+(44-Robot.robotx[5]/1.5037594e-3)/25.65*1.5037594e-3
-                    deltay=7+(32-Robot.roboty[5]/1.5306122e-3)/29.71*1.5306122e-3
-                    Target_circle=np.array([deltax, deltay, r_object* 1.5037594e-3])
+                    deltax=(20+(44-Robot.robotx[5]/25.65))*1.5037594e-3
+                    deltay=(7+(32-Robot.roboty[5]/29.71))*1.5306122e-3
+                    Target_circle=np.array([Robot.robotx[5]+Robot.roboty[5]+deltax, deltay, r_object* 1.5037594e-3])
                     xs=[]
                     for i in range(N_target+2):
                         xs.append(Target_circle[:2])

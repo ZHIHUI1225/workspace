@@ -3,11 +3,10 @@
 	<node pkg="agent_position" type="getposition" name="getposition" />
 	<node pkg="learning_tf" type="tf_broadcaster" name="tf_broadcaster" />
 	<node pkg="record" type="recordvideo.py" name="recordvideo" />
-	<!-- <node pkg="co_transform" type="tf_listener_color.py" name="tf_listener_color" output="screen"/> -->
+	<node pkg="co_transform" type="tf_listener_color.py" name="tf_listener_color" output="screen"/>
 	<!-- <node pkg="mpc" type="mpc_multipoints.py" name="mpc_multipoints" output="screen"/> -->
 	<!-- <node pkg="mpc" type="Jmatrix.py" name="Jmatrix" output="screen"/> -->
-	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/>  -->
-	<!-- <node pkg="mpc" type="mpc_updateJ.py" name="mpc_updateJ" output="screen"/>  -->
+	<node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/> 
 	<node pkg="pulling" type="mpc_pulling.py" name="mpc_pulling" output="screen"/> 
 
 	<!-- <node pkg="co_transform" type="tf_listener.py" name="tf_listener" output="screen"/>

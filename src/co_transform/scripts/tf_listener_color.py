@@ -1,4 +1,6 @@
 #!/usr/bin/env python -m memory_profiler
+from std_msgs.msg import Int8
+from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
@@ -155,6 +157,17 @@ class Robot1:
                 pose.position.y = msg.robot_pose_array[i].position.y
                 pose.position.z = msg.robot_pose_array[i].position.z
                 self.p.poses.append(pose)
+
+class Targe_ID:
+    def __init__(self):
+        self.flag=False
+        self.ID=Int8()
+        self.sub=rospy.Subscriber('goflag',Bool,self.flag_callback,queue_size=10)
+        self.subID=rospy.Subscriber('TargetID',Int8,self.ID_callback,queue_size=10)
+    def flag_callback(self,msg):
+        self.flag=msg.data
+    def ID_callback(self,msg):
+        self.ID=msg.data
 
 
 class frame_image():
@@ -351,6 +364,7 @@ class tubeshape():
         y_val = [x[1] for x in data]
         return data
 
+
 if __name__ == '__main__':
     try:
         rospy.init_node('tf_listener_node')
@@ -358,17 +372,17 @@ if __name__ == '__main__':
         RedPoints=Redpoints()
         tf_w2l= TFListener('world','local')
         Frame=frame_image()
+        TT=Targe_ID()
         # robot2=Robot2()
         # robot1=Robot1()
         # feature_points_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         redpoints_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         # listener_w2l = tf.TransformListener()
         rate = rospy.Rate(50.0)
-        flag=0
         while not rospy.is_shutdown() :
-            if Frame.image is not None and flag==0:
-                wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 20, (1229-63,520-44), True)
-                flag=1
+            # if Frame.image is not None and flag==0:
+            #     wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 20, (1229-63,520-44), True)
+            #     flag=1
             if  RedPoints.points.poses and Frame.image is not None:
                 # robot2_local=tf_w2l.transform(robot2.p)
                 # robot1_local=tf_w2l.transform(robot1.p)
@@ -409,29 +423,29 @@ if __name__ == '__main__':
                         redlist.append(pose_stamped)
                     red_points=tf_w2l.transform_back(redlist)
                     redpoints_pub.publish(red_points)
-                    # for pose in feature_points_local.poses:
-                    # L_real=200* 1.5037594e-3#the length of tube
-                    # r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
-                    # r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
-                    # Tube=tubeshape(length=L_real,p1=r1,p2=r2)
-                    # xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
-                    # center=(int(r1[0]/1.5037594e-3),int(r1[1]/1.5306122e-3))
-                    # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                    # center=(int(r2[0]/1.5037594e-3),int(r2[1]/1.5306122e-3))
-                    # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                    # for i in range(0,len(xt),2):
-                    #     center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
-                    #     cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
+                # for pose in feature_points_local.poses:
+                # L_real=200* 1.5037594e-3#the length of tube
+                # r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
+                # r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
+                # Tube=tubeshape(length=L_real,p1=r1,p2=r2)
+                # xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
+                # center=(int(r1[0]/1.5037594e-3),int(r1[1]/1.5306122e-3))
+                # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
+                # center=(int(r2[0]/1.5037594e-3),int(r2[1]/1.5306122e-3))
+                # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
+                # for i in range(0,len(xt),2):
+                #     center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
+                #     cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
                     if red_points is not None:
                         for pose in red_points.poses:
                             center=(int(pose.position.x),int(pose.position.y))
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
-                    wri.write(Frame.image)
-                    cv2.imshow("frame",Frame.image)
-                    cv2.waitKey(1)
+                    # wri.write(Frame.image)
+                    # cv2.imshow("Redpoints",Frame.image)
+                    # cv2.waitKey(1)
                     
             rate.sleep()
 
     except rospy.ROSInterruptException:
         pass
-    wri.release()
+    # wri.release()

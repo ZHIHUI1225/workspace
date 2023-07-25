@@ -1,0 +1,6 @@
+*.avi
+build/
+devel/
+*.png
+*.pdf
+*.gv
