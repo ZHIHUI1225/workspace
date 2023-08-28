@@ -20,6 +20,7 @@ Visualize::Visualize()
   Red_points_pub = n.advertise<sensor_msgs::PointCloud>("/red_points", 1);
   //listener_ = new tf::TransformListener(n, ros::Duration(5.0), true);
   robot_pub_ = n.advertise<robot_msg::robot_pose_array>("/robot", 1);
+  obstacle_pub_ = n.advertise<robot_msg::robot_pose_array>("/obstacle", 1);
   
 }  
 

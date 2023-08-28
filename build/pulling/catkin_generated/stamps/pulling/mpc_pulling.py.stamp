@@ -280,7 +280,7 @@ if __name__ == '__main__':
         Q = 1*np.eye(2*N_target)
         R=0.0001*np.eye(4)
         Qr=0.05*np.eye(2)
-        Qr[1,1]=0
+        # Qr[1,1]=0
         
         #### cost function
         obj = 0 #### cost
@@ -322,7 +322,7 @@ if __name__ == '__main__':
             if Robot.flag==1 and Targe_zone.flag==1 and Targe_id.enclose_flag is True and transport_flag is False:
                 # object pick hard constraint
                 if object_flag==0 and Targe_id.ID!=0:
-                    Target_circle=np.array([Targe_zone.target.x*1.05, Targe_zone.target.y*1.1,Targe_zone.target.z])
+                    Target_circle=np.array([Targe_zone.target.x*0.8, Targe_zone.target.y*0.8,Targe_zone.target.z])
                     xs=[]
                     for i in range(N_target):
                         xs.append(Target_circle[:2])
@@ -332,16 +332,19 @@ if __name__ == '__main__':
                     lbg = []
                     ubg = []
                     for i in range(N+1):
-                        for j in range(8):
+                        for j in range(6):
                             if j%3==0:
                                 g.append(X[i, j])
-                                lbg.append(30*1.5306122e-3)
+                                lbg.append(40*1.5306122e-3)
                                 ubg.append(1100*1.5306122e-3 )
                                 # ubg.append(1100*1.5306122e-3 )
                             if j%3==1:
                                 g.append(X[i, j])
-                                lbg.append(30* 1.5037594e-3)
-                                ubg.append(450* 1.5037594e-3)
+                                lbg.append(40* 1.5037594e-3)
+                                ubg.append(440* 1.5037594e-3)
+                        g.append(X[i, 7])
+                        lbg.append(50* 1.5037594e-3)
+                        ubg.append(440* 1.5037594e-3)
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
                         lbg.append(L*0.4)
@@ -361,22 +364,22 @@ if __name__ == '__main__':
                         g.append(Xnew[i,1])
                         lbg.append(0)
                         ubg.append(1)
-                    for a in range(len(Robot.robotID)):
-                        if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                            C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                            for i in range(N+1):
-                                g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                                lbg.append(C[2]*2.1)
-                                ubg.append(200)
-                                g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                                lbg.append(C[2]*2.1)
-                                ubg.append(200)
-                                ddp=1.3
-                                for j in range(N_target):
-                                    # g.append(ca.norm_2((X[i,:2].T+X[i,3:5].T+X[i,-2:].T)/3-C[:2]))
-                                    g.append(ca.norm_2(X[i,-2:].T-C[:2]))
-                                    lbg.append(C[2]*3)
-                                    ubg.append(200)
+                    # for a in range(len(Robot.robotID)):
+                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
+                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
+                    #         for i in range(N+1):
+                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
+                    #             lbg.append(C[2]*2.1)
+                    #             ubg.append(200)
+                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
+                    #             lbg.append(C[2]*2.1)
+                    #             ubg.append(200)
+                    #             ddp=1.3
+                    #             for j in range(N_target):
+                    #                 # g.append(ca.norm_2((X[i,:2].T+X[i,3:5].T+X[i,-2:].T)/3-C[:2]))
+                    #                 g.append(ca.norm_2(X[i,-2:].T-C[:2]))
+                    #                 lbg.append(C[2]*4)
+                    #                 ubg.append(200)
 
                     r1=np.array([[Robot.robotx[0]],[Robot.roboty[0]]])
                     r2=np.array([[Robot.robotx[1]],[Robot.roboty[1]]])
@@ -412,8 +415,8 @@ if __name__ == '__main__':
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
                     # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
-                    # if  x_center[0]>Target_circle[0] or x_center[1]>Target_circle[1]:
-                    if  x_center[0]<Target_circle[0]:
+                    if  x_center[0]>Target_circle[0] or x_center[1]>Target_circle[1]:
+                    # if  x_center[0]<Target_circle[0]:
                         transport_flag=False
                         transport_flag_pub.publish(transport_flag)
                         ## set parameter
@@ -437,11 +440,11 @@ if __name__ == '__main__':
                             pub.publish(vel_msg)
                             d = rospy.Duration(T)
                             rospy.sleep(d)
-                        ran_vel=np.zeros((1,4))
-                        vel_msg = Float64MultiArray(data=ran_vel[0])
-                        rospy.loginfo(vel_msg)
-                        pub.publish(vel_msg)
-                        d = rospy.Duration(0.05)
+                        # ran_vel=np.zeros((1,4))
+                        # vel_msg = Float64MultiArray(data=ran_vel[0])
+                        # rospy.loginfo(vel_msg)
+                        # pub.publish(vel_msg)
+                        # d = rospy.Duration(0.05)
                         rospy.sleep(d)
                     else:
                         object_flag=0

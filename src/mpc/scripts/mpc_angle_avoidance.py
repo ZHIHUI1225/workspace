@@ -28,8 +28,9 @@ import time
 from scipy.optimize import fsolve
 from scipy.special import ellipe
 from cv_bridge import CvBridge
-import cv2
 import scipy.optimize as opt
+import matplotlib.pyplot as plt
+from sympy import symbols, Eq, solve
 # from dlodynamics import dlodynamics
 # from Dynamicupdateplot import DynamicUpdate
 
@@ -57,6 +58,78 @@ class Point_tube:
             self.middlepoint.x=self.feature_point.points[int((len(msg.poses))/2)].x* 1.5037594e-3
             self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.poses)
+
+class Obstacle_QR:
+    def __init__(self):
+        self.points=np.zeros((4,2))
+        self.flag=0
+        self.senseP=np.zeros((2,2))
+        self.flag_in=True
+        self.vector=[]
+        self.sub = rospy.Subscriber('/obstacle', robot_pose_array, self.pose_callback,queue_size=10)
+    def pose_callback(self, msg): # feedback means actual value.
+        for i in range(len(msg.robot_pose_array)):
+            ID=msg.robot_pose_array[i].ID.data
+            self.points[int(ID-2),0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
+            self.points[int(ID-2),1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
+        self.flag=1
+        self.vector=[]
+        self.vector.append(self.points[1]-self.points[0])
+        self.vector.append(self.points[2]-self.points[3])
+        self.vector.append(self.points[3]-self.points[0])
+        self.vector.append(self.points[2]-self.points[1])
+    def calculateP(self,P):
+        # weather between vector 0 and 1
+        if np.cross(self.vector[0],P-self.points[0])*np.cross(self.vector[1],P-self.points[3])<=0:
+            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+                self.flag_in=True
+            elif np.cross(self.vector[2],P-self.points[0])>0:
+                self.flag_in=False
+                self.senseP[0,:]=self.points[0]
+                self.senseP[1,:]=self.points[3]
+            else:
+                self.flag_in=False
+                self.senseP[0,:]=self.points[1]
+                self.senseP[1,:]=self.points[2]
+        elif np.cross(self.vector[0],P-self.points[0])<0:
+            self.flag_in=False
+            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+                self.senseP[0,:]=self.points[0]
+                self.senseP[1,:]=self.points[1]
+            elif np.cross(self.vector[2],P-self.points[0])>0:
+                self.senseP[0,:]=self.points[3]
+                self.senseP[1,:]=self.points[1]
+            else:
+                self.senseP[0,:]=self.points[2]
+                self.senseP[1,:]=self.points[0]
+        else:
+            self.flag_in=False
+            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+                self.senseP[0,:]=self.points[3]
+                self.senseP[1,:]=self.points[2]
+            elif np.cross(self.vector[2],P-self.points[0])>0:
+                self.senseP[0,:]=self.points[0]
+                self.senseP[1,:]=self.points[2]
+            else:
+                self.senseP[0,:]=self.points[3]
+                self.senseP[1,:]=self.points[1]
+        return self.senseP
+    
+    def EGO(self,P):
+        if np.cross(self.vector[0],P-self.points[0])*np.cross(self.vector[1],P-self.points[3])<=0 and np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+            self.flag_in=True
+        else:
+            self.flag_in=False
+        d=np.zeros((4,1))
+        p=np.zeros((4,2))
+        for i in range(3):
+            [d[i],p[i,:]]=point_line_distance(P, self.points[i], self.points[i+1])
+        [d[3],p[3,:]]=point_line_distance(P, self.points[3], self.points[0])
+        min_value = np.min(d)
+        min_index = np.argmin(d)
+        if self.flag_in is True:
+            min_value=-min_value
+        return [min_value,p[min_index,:]]
 
 
 class QRrobot:
@@ -183,6 +256,7 @@ class tubeshape():
                 points.append(y[:,i*int(len(y[0,:])/(n+1))])
         return points
 
+
 class PlotUpdate():
     #Suppose we know the x range
     #min_x = 0
@@ -232,6 +306,66 @@ class PlotUpdate():
         self.figure.canvas.flush_events()
 
 
+def calculate_circle_line_intersection(center, radius, startPoint, endPoint):
+    # 计算圆与线段的交点
+    x, y = symbols('x y', real=True)
+    # 圆的方程
+    circleEquation = (x - center[0])**2 + (y - center[1])**2 - radius**2
+    # 线段的方程
+    if startPoint[0] - endPoint[0] != 0:
+        lineEquation = (y - startPoint[1]) - ((startPoint[1] - endPoint[1]) / (startPoint[0] - endPoint[0])) * (x - startPoint[0])
+    else:
+        lineEquation = x - startPoint[0]
+    # 求解交点
+    intersectionPoints = solve([circleEquation, lineEquation], (x, y))
+    # 提取交点坐标
+    intersectionPoints = [[float(point[0].evalf()), float(point[1].evalf())] for point in intersectionPoints]
+    P = []
+    for point in intersectionPoints:
+        if ((point[0] - startPoint[0]) * (point[0] - endPoint[0])) <= 0 and ((point[1] - startPoint[1]) * (point[1] - endPoint[1])) <= 0:
+            P.append(point)
+    return P
+
+def get_intersectionPoints(points,R,V):
+    if V[0] < points[1, 0] and V[0] > points[0, 0] and V[1] < points[3, 1] and V[1] > points[0, 1]:
+        P=[]
+    else:
+        # 计算交点
+        P = []
+        for n in range(3):
+            intersectionPoints = calculate_circle_line_intersection(V, R, points[n, :], points[n + 1, :])
+            if len(intersectionPoints)!= 0:
+                P.append(intersectionPoints)
+
+        intersectionPoints = calculate_circle_line_intersection(V, R, points[3, :], points[0, :])
+        if len(intersectionPoints) != 0:
+            P.append(intersectionPoints)
+        if len(P)==2:
+            P=np.reshape(P,(-1,2))
+            if P[1,0] == P[0,0] or P[0,1] == P[1,1]:
+                Ctheta = np.dot(P[0,:] - V, P[1,:] - V) / np.linalg.norm(P[0,:] - V) / np.linalg.norm(P[1,:] - V)
+            else:
+                dmin = 1000000
+                for m in range(4):
+                    if np.linalg.norm(points[m, :] - V) < dmin:
+                        dmin = np.linalg.norm(points[m, :] - V)
+                        k = m
+                # 如果在角
+                if (V[0] - points[k, 0]) * (V[0] - P[0,0]) * (V[1] - points[k, 1]) * (V[1] - P[0,1]) > 0 and \
+                        (V[0] - points[k, 0]) * (V[0] - P[1,0]) * (V[1] - points[k, 1]) * (V[1] - P[1,1]) > 0:
+                    pass
+                else:
+                    d1 = np.linalg.norm(points[k, :] - P[0,:])
+                    d2 = np.linalg.norm(points[k, :] - P[1,:])
+                    if d1 > d2:
+                        P[0,:] = points[k, :]
+                    else:
+                        P[1,:] = points[k, :]
+    if P!=[]:
+        P=np.array(P).reshape(-1,2)    
+    return P
+
+
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
@@ -242,13 +376,14 @@ if __name__ == '__main__':
         feature=Point_tube()
         Targe_id=Targe_ID()
         model_errorplot=PlotUpdate(1)
+        Obstacle=Obstacle_QR()
         # Frame=frame_image()
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
         un= 4 # control step
         v_max = 0.015
-        omega_max = 0.4
-        rate = rospy.Rate(30)
+        omega_max = 0.8
+        rate = rospy.Rate(10)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
         theta = ca.SX.sym('theta')
@@ -297,7 +432,7 @@ if __name__ == '__main__':
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
         Q = 1*np.eye(2*N_target)
-        R=0.01*np.eye(4)
+        R=0.001*np.eye(4)
         Qr=1*np.eye(2)
         lbx = []
         ubx = []
@@ -336,33 +471,26 @@ if __name__ == '__main__':
         enclose_flag=False
         enclose_flag_pub.publish(enclose_flag)
         while not rospy.is_shutdown():
+            
             if Targe_id.flag is True:
                 enclose_flag=False
                 enclose_flag_pub.publish(enclose_flag)
             ## state 00 begin
-            if Robot.flag==1 and feature.middlepoint.x!=0 and Targe_id.transport_flag is False and enclose_flag is False:
+            if Robot.flag==1 and feature.middlepoint.x!=0 and Targe_id.transport_flag is False and enclose_flag is False and Obstacle.flag==1 :
                 # object pick hard constraint
                 
-                if object_flag==0 and Targe_id.ID!=0:
+                if object_flag==0 and Targe_id.ID!=0 :
                     # deltax=(20+(44-Robot.robotx[5]/1.5037594e-3/25.65))*1.5037594e-3
                     # deltay=(7+(32-Robot.roboty[5]/1.5306122e-3/29.71))*1.5306122e-3
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
+
+                    
                     xs=[]
                     # for i in range(N_target+2):
                     xs.append(Target_circle[:2])
                     xs=np.array(xs).reshape(-1,1)
                     object_flag=1
-                     #### cost function
-                    obj = 0 #### cost
-                    for i in range(int(N/6),N):
-                        #without angle error
-                        #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
-                        # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
-                        # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
-                        #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
-                        obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,8:10])/3-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,8:10])/3-P[-2:].T).T])-\
-                            0.7*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
                     
                     g = [] # equal constrains
                     lbg = []
@@ -371,31 +499,31 @@ if __name__ == '__main__':
                         for j in range(8):
                             if j%3==0:
                                 g.append(X[i, j])
-                                lbg.append(35*1.5306122e-3)
+                                lbg.append(30*1.5306122e-3)
                                 ubg.append(1100*1.5306122e-3 )
                             if j%3==1:
                                 g.append(X[i, j])
-                                lbg.append(30* 1.5037594e-3)
+                                lbg.append(20* 1.5037594e-3)
                                 ubg.append(450* 1.5037594e-3)
                         for j in range(8,12,1):
                             if j%2==0:
                                 g.append(X[i, j])
-                                lbg.append(35*1.5306122e-3)
+                                lbg.append(30*1.5306122e-3)
                                 ubg.append(1100*1.5306122e-3 )
                             else:
                                 g.append(X[i, j])
-                                lbg.append(30* 1.5037594e-3)
+                                lbg.append(20* 1.5037594e-3)
                                 ubg.append(450* 1.5037594e-3)
-                    ddp=1.2
+                    ddp=1.3
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
                         lbg.append(L*0.5)
                         ubg.append(L*0.9)
                         g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2.1)
+                        lbg.append(Target_circle[2]*2)
                         ubg.append(200)
                         g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2.1)
+                        lbg.append(Target_circle[2]*2)
                         ubg.append(200)
                         g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
                         lbg.append(-0.5)
@@ -416,27 +544,25 @@ if __name__ == '__main__':
                         g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
                         lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
-                    # for a in range(len(Robot.robotID)):
-                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                    #         for i in range(N+1):
-                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                    #             lbg.append(C[2]*2.1)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                    #             lbg.append(C[2]*2.1)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
-                    #             lbg.append(C[2]*2.1)
-                    #             ubg.append(200)
-                    #             for j in range(N_target):
-                    #                 g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
-                    #                 lbg.append(C[2]*ddp)
-                    #                 ubg.append(200)
+                    for a in range(len(Robot.robotID)):
+                        if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
+                            C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
+                            for i in range(N+1):
+                                g.append(ca.norm_2(X[i,:2].T-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                g.append(ca.norm_2(X[i,3:5].T-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                for j in range(N_target):
+                                    g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
+                                    lbg.append(C[2]*ddp)
+                                    ubg.append(200)
 
-                    nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
-                    opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
-                    solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
+                   
 
 
                 if object_flag==1:
@@ -452,26 +578,53 @@ if __name__ == '__main__':
                             x0.append(feature.feature_point.points[xk].y)
                     x0=np.array(x0).reshape(-1,1)
                     x1=np.concatenate(x0)
-                    # if x_next is not None:
-                    #     model_error_x.append(x_next[8][0]-x0[8][0])
-                    #     model_error_y.append(x_next[9][0]-x0[9][0])
-                    #     model_errorplot.on_running(model_error_x,model_error_y)
-                    # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
-                    # ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
-                    
-                    # for i in range(1,N_target,1):
-                    #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
-                    # x_center=x0[:2]+x0[3:5]
-                    # x_center=x0[6:8]
-                    # for i in range(1,N_target):
-                    #     x_center=x_center+x0[6+2*i:8+2*i]
-                    # x_center=(x_center/(N_target)).reshape(1,-1)
-                    x_center=x0[:2]+x0[3:5]+x0[8:10]
+                    x_center=x0[6:8]
+                    for i in range(1,N_target):
+                        x_center=x_center+x0[6+2*i:8+2*i]
                     x_center=(x_center/(N_target)).reshape(1,-1)
+                    # update enviroment information
+                    R=70*1.5306122e-3
+                    intersectionP=[]
+                    intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
+                    intersectionP.append(Obstacle.calculateP(x1[3:5]).copy())
+                    intersectionP.append(Obstacle.calculateP(x1[8:10]).copy())
+                    # update the cost function
+                    obj = 0 #### cost
+                    kcos=200
+                    Sf=0.3
+                    Ko=2
+                    for i in range(N):
+                        obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2:].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2:].T).T])-\
+                            0.05*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)-\
+                            Ko*ca.tanh(3/(1+Sf)*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,6:8], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,6:8])))-\
+                            Ko*ca.tanh(3/(1+Sf)*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,8:10], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,8:10]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,8:10]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,8:10])))-\
+                            Ko*ca.tanh(3/(1+Sf)*(ca.dot(ca.DM(intersectionP[2][0].reshape(1,-1))- X[i,10:12], ca.DM(intersectionP[2][1].reshape(1,-1)) - X[i,10:12]) / ca.norm_2(ca.DM(intersectionP[2][0].reshape(1,-1)) - X[i,10:12]) / ca.norm_2(ca.DM(intersectionP[2][1].reshape(1,-1))- X[i,10:12]) )) 
+                        # if np.linalg.norm(x_center[0]-Target_circle[:2])/1.5037594e-3 <200:
+                        #     obj=obj-1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
+                        # if len(intersectionP[0])==2: 
+                        #     PI=ca.DM(np.array(intersectionP[0]).reshape(-1,2))
+                        #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,:2],PI[1,:]-X[i,:2])/ca.norm_2(PI[0,:]-X[i,:2])/ca.norm_2(PI[1,:]-X[i,:2])+1))
+                        # else:
+                        #     obj=obj-kcos
+                        # if len(intersectionP[1])==2:
+                        #     PI=ca.DM(np.array(intersectionP[1]).reshape(-1,2))
+                        #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,3:5],PI[1,:]-X[i,3:5])/ca.norm_2(PI[0,:]-X[i,3:5])/ca.norm_2(PI[1,:]-X[i,3:5])+1))
+                        # else:
+                        #     obj=obj-kcos
+                        # if len(intersectionP[2])==2:
+                        #     PI=ca.DM(np.array(intersectionP[2]).reshape(-1,2))
+                        #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,8:10],PI[1,:]-X[i,8:10])/ca.norm_2(PI[0,:]-X[i,8:10])/ca.norm_2(PI[1,:]-X[i,8:10])+1))
+                        # else:
+                        #     obj=obj-kcos
+                   
+                    nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
+                    opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
+                    solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
+                   
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
-                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
-                        # enclose_flag=False
-                        # enclose_flag_pub.publish(enclose_flag)
+                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3:
+                        enclose_flag=False
+                        enclose_flag_pub.publish(enclose_flag)
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)
@@ -491,11 +644,11 @@ if __name__ == '__main__':
                             pub.publish(vel_msg)
                             d = rospy.Duration(T)
                             rospy.sleep(d)
-                        # ran_vel=np.zeros((1,4))
-                        # vel_msg = Float64MultiArray(data=ran_vel[0])
-                        # rospy.loginfo(vel_msg)
-                        # pub.publish(vel_msg)
-                        # d = rospy.Duration(0.00001)
+                        ran_vel=np.zeros((1,4))
+                        vel_msg = Float64MultiArray(data=ran_vel[0])
+                        rospy.loginfo(vel_msg)
+                        pub.publish(vel_msg)
+                        d = rospy.Duration(0.02)
                         rospy.sleep(d)
                     else:
                         object_flag=0

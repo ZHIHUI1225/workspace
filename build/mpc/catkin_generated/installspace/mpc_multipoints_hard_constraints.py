@@ -245,10 +245,10 @@ if __name__ == '__main__':
         # Frame=frame_image()
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
-        un= 5 # control step
+        un= 4 # control step
         v_max = 0.015
-        omega_max = 0.5
-        rate = rospy.Rate(10)
+        omega_max = 0.4
+        rate = rospy.Rate(30)
         x = ca.SX.sym('x')
         y = ca.SX.sym('y')
         theta = ca.SX.sym('theta')
@@ -297,8 +297,8 @@ if __name__ == '__main__':
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
         Q = 1*np.eye(2*N_target)
-        R=0.00001*np.eye(4)
-        Qr=0.003*np.eye(2)
+        R=0.01*np.eye(4)
+        Qr=1*np.eye(2)
         lbx = []
         ubx = []
         for _ in range(N):
@@ -355,14 +355,14 @@ if __name__ == '__main__':
                     object_flag=1
                      #### cost function
                     obj = 0 #### cost
-                    for i in range(N):
+                    for i in range(int(N/6),N):
                         #without angle error
                         #obj = obj + ca.mtimes([X[i, -2:]-P[-2:].T, Q, (X[i, -2:]-P[-2:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])-0.03*ca.norm_2(X[i,:2]-X[i,3:-3])*ca.norm_2((X[i,:2]+X[i,3:-3])/2-X[i, -2:])
                         # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])
                         # obj = obj + ca.mtimes([X[i, -2*N_target:]-P[-2*N_target:].T, Q, (X[i, -2*N_target:]-P[-2*N_target:].T).T])+ ca.mtimes([U[i, :], R, U[i, :].T])\
                         #     +ca.mtimes([X[i,:2]-P[-2*N_target-4:-2*N_target-2].T,Qr,(X[i,:2]-P[-2*N_target-4:-2*N_target-2].T).T])+ca.mtimes([X[i,3:5]-P[-2*N_target-2:-2*N_target].T,Qr,(X[i,3:5]-P[-2*N_target-2:-2*N_target].T).T])
-                        obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2:].T,Qr,((X[i,6:8]+X[i,8:10]+X[i,10:12])/3-P[-2:].T).T])-\
-                            1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
+                        obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,8:10])/3-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,8:10])/3-P[-2:].T).T])-\
+                            0.7*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
                     
                     g = [] # equal constrains
                     lbg = []
@@ -371,26 +371,35 @@ if __name__ == '__main__':
                         for j in range(8):
                             if j%3==0:
                                 g.append(X[i, j])
-                                lbg.append(30*1.5306122e-3)
+                                lbg.append(35*1.5306122e-3)
                                 ubg.append(1100*1.5306122e-3 )
                             if j%3==1:
                                 g.append(X[i, j])
-                                lbg.append(20* 1.5037594e-3)
+                                lbg.append(30* 1.5037594e-3)
                                 ubg.append(450* 1.5037594e-3)
-                    ddp=1.5
+                        for j in range(8,12,1):
+                            if j%2==0:
+                                g.append(X[i, j])
+                                lbg.append(35*1.5306122e-3)
+                                ubg.append(1100*1.5306122e-3 )
+                            else:
+                                g.append(X[i, j])
+                                lbg.append(30* 1.5037594e-3)
+                                ubg.append(450* 1.5037594e-3)
+                    ddp=1.2
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
                         lbg.append(L*0.5)
-                        ubg.append(L*0.8)
+                        ubg.append(L*0.9)
                         g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2.2)
+                        lbg.append(Target_circle[2]*2.1)
                         ubg.append(200)
                         g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2.2)
+                        lbg.append(Target_circle[2]*2.1)
                         ubg.append(200)
-                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
-                        # lbg.append(-0.5)
-                        # ubg.append(200)
+                        g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
+                        lbg.append(-0.5)
+                        ubg.append(200)
                         for j in range(N_target):
                             g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
                             lbg.append(Target_circle[2]*ddp)
@@ -407,23 +416,23 @@ if __name__ == '__main__':
                         g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
                         lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
-                    for a in range(len(Robot.robotID)):
-                        if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                            C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                            for i in range(N+1):
-                                g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                                lbg.append(C[2]*2.1)
-                                ubg.append(200)
-                                g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                                lbg.append(C[2]*2.1)
-                                ubg.append(200)
-                                g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
-                                lbg.append(C[2]*2.1)
-                                ubg.append(200)
-                                for j in range(N_target):
-                                    g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
-                                    lbg.append(C[2]*ddp)
-                                    ubg.append(200)
+                    # for a in range(len(Robot.robotID)):
+                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
+                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
+                    #         for i in range(N+1):
+                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
+                    #             lbg.append(C[2]*2.1)
+                    #             ubg.append(200)
+                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
+                    #             lbg.append(C[2]*2.1)
+                    #             ubg.append(200)
+                    #             g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
+                    #             lbg.append(C[2]*2.1)
+                    #             ubg.append(200)
+                    #             for j in range(N_target):
+                    #                 g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
+                    #                 lbg.append(C[2]*ddp)
+                    #                 ubg.append(200)
 
                     nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -453,14 +462,16 @@ if __name__ == '__main__':
                     # for i in range(1,N_target,1):
                     #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
                     # x_center=x0[:2]+x0[3:5]
-                    x_center=x0[6:8]
-                    for i in range(1,N_target):
-                        x_center=x_center+x0[6+2*i:8+2*i]
+                    # x_center=x0[6:8]
+                    # for i in range(1,N_target):
+                    #     x_center=x_center+x0[6+2*i:8+2*i]
+                    # x_center=(x_center/(N_target)).reshape(1,-1)
+                    x_center=x0[:2]+x0[3:5]+x0[8:10]
                     x_center=(x_center/(N_target)).reshape(1,-1)
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
-                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.8:
-                        enclose_flag=False
-                        enclose_flag_pub.publish(enclose_flag)
+                    if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
+                        # enclose_flag=False
+                        # enclose_flag_pub.publish(enclose_flag)
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)
@@ -480,11 +491,11 @@ if __name__ == '__main__':
                             pub.publish(vel_msg)
                             d = rospy.Duration(T)
                             rospy.sleep(d)
-                        ran_vel=np.zeros((1,4))
-                        vel_msg = Float64MultiArray(data=ran_vel[0])
-                        rospy.loginfo(vel_msg)
-                        pub.publish(vel_msg)
-                        d = rospy.Duration(0.02)
+                        # ran_vel=np.zeros((1,4))
+                        # vel_msg = Float64MultiArray(data=ran_vel[0])
+                        # rospy.loginfo(vel_msg)
+                        # pub.publish(vel_msg)
+                        # d = rospy.Duration(0.00001)
                         rospy.sleep(d)
                     else:
                         object_flag=0

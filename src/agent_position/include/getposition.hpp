@@ -79,7 +79,7 @@ class Visualize //速度控制类
     ros::NodeHandle n; // 节点句柄
 
 	ros::Subscriber image_sub;
-	ros::Publisher robot_pub_,line_without_QR_pub,Red_points_pub;
+	ros::Publisher robot_pub_,line_without_QR_pub,Red_points_pub,obstacle_pub_ ;
 	robot_msg::robot_pose robot_;
 	// sensor_msgs::PointCloud poly_pc_;
 	
@@ -174,7 +174,7 @@ class Visualize //速度控制类
 	// medianBlur(gray, gray, 5);
 	// imshow("thre",thre);
 	Mat Mask1 = Mat::zeros(frame_cut.size(), CV_8UC1); //】】掩膜
-	robot_msg::robot_pose_array robot_array_new;
+	robot_msg::robot_pose_array robot_array_new, obstacle_array;
 	cv::aruco::detectMarkers(frame_cut, dictionary, markerCorners, markerIds);
 	cv::aruco::estimatePoseSingleMarkers(markerCorners, 0.05, cameraMatrix, distCoeffs, rvecs, tvecs);
 	double deltax;
@@ -207,7 +207,7 @@ class Visualize //速度控制类
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
 					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
 					}
-					if (markerIds[i]<10){
+					if (markerIds[i]<10 && markerIds[i]>5){
 					//读取圆心
 					// deltax=8-16/1062*(xnew-66);
 					deltax=8-(xnew-43)/58.375;
@@ -224,11 +224,29 @@ class Visualize //速度控制类
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
 					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
 					}	
+					if (markerIds[i]>1 && markerIds[i]<6){
+						robot_msg::robot_pose obstacle;
+						obstacle.ID.data = markerIds[i];
+						obstacle.position.x=markerCorners[i][0].x ;
+						obstacle.position.y=markerCorners[i][0].y ;
+						obstacle_array.robot_pose_array.push_back(obstacle);
+						Point center(cvRound(obstacle.position.x ), cvRound(obstacle.position.y));
+						//读取半径
+						int radius = cvRound(2);
+						// cv::imshow("cicle",frame_cut);
+						//绘制圆
+						circle(frame_cut, center, radius, Scalar(255, 0, 255), -1);
+						Point center1(cvRound(xnew), cvRound(ynew));
+						radius = cvRound(30);
+						circle(Mask1, center1, radius, Scalar(255, 255, 255), -1); 
+						
+					}
 			}
 		}
 	// Point center(500,200);
 	// circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
 	robot_pub_.publish(robot_array_new);
+	obstacle_pub_.publish(obstacle_array);
 	Mat imgAddMask = frame_cut.clone();
 	imgAddMask .setTo(255, Mask1);
 

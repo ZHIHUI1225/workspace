@@ -108,12 +108,12 @@ if __name__ == '__main__':
         rate = rospy.Rate(30.0)
         go_flag=Bool() # run mpc_multipoints_hard_constraints
         flag=0
-   
+        R=70 # sense radiu
         while not rospy.is_shutdown() :
              # Create Point32 message
             point = Point32()
-            point.x = 920*1.5037594e-3
-            point.y = 470*1.5306122e-3
+            point.x = 200*1.5037594e-3
+            point.y = 200*1.5306122e-3
             point.z = 40*1.5037594e-3
             Targetzone_pub.publish(point)
             if Frame.image is not None and flag==0 and Robot.flag==1:
@@ -128,9 +128,9 @@ if __name__ == '__main__':
                 for i in range(len(Robot.robotID)):
                     if Robot.robotID[i]>2 and Robot.robotID[i]<10:
                         ID=Robot.robotID[i]
-                        # d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
-                        d=(Robot.robotx[ID-1]- point.x)**2
-                        if (Robot.robotx[ID-1]<point.x) and d<distence:
+                        d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
+                        # d=(Robot.robotx[ID-1]- point.x)**2
+                        if d<distence and (Robot.robotx[ID-1]>point.x or Robot.roboty[ID-1]>point.y):
                             distence=d
                             Target_ID.data=ID
                 TargetID_pub.publish(Target_ID.data)
@@ -139,16 +139,15 @@ if __name__ == '__main__':
                     mpc1_flag_pub.publish(go_flag.data)
                 flag=1
 
-            if flag==1:
-                
+            if flag==1:  
                 if F.transport_flag is True and F.enclose_flag is True:
                     distence=1000
                     for i in range(len(Robot.robotID)):
                         if Robot.robotID[i]>2 and Robot.robotID[i]<10:
                             ID=Robot.robotID[i]
-                            # d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
-                            d=(Robot.robotx[ID-1]- point.x)**2
-                            if (Robot.robotx[ID-1]<point.x) and d<distence:
+                            d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
+                            # d=(Robot.robotx[ID-1]- point.x)**2
+                            if d<distence and (Robot.robotx[ID-1]>point.x or Robot.roboty[ID-1]>point.y):
                                 distence=d
                                 Target_ID.data=int(ID)
                     TargetID_pub.publish(Target_ID.data)
@@ -160,11 +159,17 @@ if __name__ == '__main__':
                     mpc1_flag_pub.publish(go_flag.data)
 
                 P=(int(point.x/1.5037594e-3),int(point.y /1.5306122e-3))
-                cv2.rectangle(Frame.image,(P[0],0),(1229-63,520-44),(255, 0, 0),3)
+                cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
                 if feature.middlepoint.x!=0 and F.enclose_flag is False:
                     for xk in range(len(feature.feature_point.points)):
                         center=(int(feature.feature_point.points[xk].x),int(feature.feature_point.points[xk].y))
                         cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
+                    # center=(int(feature.feature_point.points[1].x),int(feature.feature_point.points[1].y))
+                    # cv2.circle(Frame.image, center, R, (0, 255, 255), 1)
+                # center=(int(Robot.robotx[0]/1.5037594e-3),int(Robot.roboty[0]/1.5306122e-3 ))
+                # cv2.circle(Frame.image, center, R, (0, 255, 255), 1)
+                # center=(int(Robot.robotx[1]/1.5037594e-3),int(Robot.roboty[1]/1.5306122e-3 ))
+                # cv2.circle(Frame.image, center, R, (0, 255, 255), 1)
                 wri.write(Frame.image)
                 cv2.imshow("frame",Frame.image)
                 cv2.waitKey(1)
