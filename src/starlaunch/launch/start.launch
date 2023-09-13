@@ -8,8 +8,12 @@
 	<!-- <node pkg="mpc" type="Jmatrix.py" name="Jmatrix" output="screen"/> -->
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_angle_avoidance.py" name="mpc_angle_avoidance" output="screen"/>  -->
-	<node pkg="mpc" type="mpc_weights.py" name="mpc_weights" output="screen"/> 
-	<node pkg="pulling" type="mpc_pulling.py" name="mpc_pulling" output="screen"/> 
+	<node pkg="mpc" type="mpc_softconstraints.py" name="mpc_softconstraints" output="screen"/> 
+	<!-- <node pkg="mpc" type="mpc_weights.py" name="mpc_weights" output="screen"/>  -->
+	<!-- <node pkg="mpc" type="mpc_circleobstacle.py" name="mpc_circleobstacle" output="screen"/>  -->
+	<!-- <node pkg="mpc" type="mpc_EGO.py" name="mpc_EGO" output="screen"/>  -->
+	<!-- <node pkg="pulling" type="mpc_pulling.py" name="mpc_pulling" output="screen"/>  -->
+	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_pulling_avoidance" output="screen"/> 
 	<!-- <node pkg="co_transform" type="tf_listener.py" name="tf_listener" output="screen"/>
 	<node pkg="co_transform" type="low_pass_filter.py" name="low_pass_filter" output="screen"/>
 	<node pkg="mpc" type="mpc_filter.py" name="mpc_filter" output="screen"/>  -->

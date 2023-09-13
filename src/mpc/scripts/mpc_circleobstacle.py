@@ -18,6 +18,7 @@ import casadi as ca
 import casadi.tools as ca_tools
 import time
 from numpy import linalg as LA
+from sympy import symbols, Eq, solve
 # import env
 # from draw import Draw_MPC_two_agents_withtube
 import matplotlib.pyplot as plt
@@ -67,12 +68,18 @@ class Obstacle_QR:
         self.senseP=np.zeros((2,2))
         self.flag_in=True
         self.vector=[]
+        self.center=np.array([0,0])
+        self.radius=60*1.5037594e-3
         self.sub = rospy.Subscriber('/obstacle', robot_pose_array, self.pose_callback,queue_size=10)
     def pose_callback(self, msg): # feedback means actual value.
         for i in range(len(msg.robot_pose_array)):
             ID=msg.robot_pose_array[i].ID.data
-            self.points[int(ID-2),0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
-            self.points[int(ID-2),1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
+            if ID !=1:
+                self.points[int(ID-2),0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
+                self.points[int(ID-2),1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
+            else:
+                self.center[0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
+                self.center[1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
         self.flag=1
         self.vector=[]
         self.vector.append(self.points[1]-self.points[0])
@@ -116,6 +123,33 @@ class Obstacle_QR:
                 self.senseP[0,:]=self.points[3]
                 self.senseP[1,:]=self.points[1]
         return self.senseP
+    def calculate_circle_line_intersection(self,V):
+        V=np.array(V)
+        # 计算圆与直径的交点
+        x, y = symbols('x y', real=True)
+
+        # 圆的方程
+        circleEquation = (x - self.center[0])**2 + (y - self.center[1])**2 - self.radius**2
+
+        # 线段的方程
+        if self.center[1] == V[1]:
+            lineEquation=x-self.center[0]
+        else:
+            K=-1*(self.center[0]-V[0])/(self.center[1]-V[1])
+            lineEquation = (y - self.center[1]) - K* (x - self.center[0])
+
+
+        # 求解交点
+        intersectionPoints = solve([circleEquation, lineEquation], (x, y))
+
+        # 提取交点坐标
+        intersectionPoints = [[float(point[0].evalf()), float(point[1].evalf())] for point in intersectionPoints]
+
+        P = np.zeros((2,2))
+        for i in range(2):
+            P[i,:]=np.array( intersectionPoints[i])
+
+        return P
 def get_derivative(x,P,a,b):
     # update the cost function                   
     x1=np.concatenate(x)
@@ -303,66 +337,6 @@ class PlotUpdate():
         self.figure.canvas.flush_events()
 
 
-def calculate_circle_line_intersection(center, radius, startPoint, endPoint):
-    # 计算圆与线段的交点
-    x, y = symbols('x y', real=True)
-    # 圆的方程
-    circleEquation = (x - center[0])**2 + (y - center[1])**2 - radius**2
-    # 线段的方程
-    if startPoint[0] - endPoint[0] != 0:
-        lineEquation = (y - startPoint[1]) - ((startPoint[1] - endPoint[1]) / (startPoint[0] - endPoint[0])) * (x - startPoint[0])
-    else:
-        lineEquation = x - startPoint[0]
-    # 求解交点
-    intersectionPoints = solve([circleEquation, lineEquation], (x, y))
-    # 提取交点坐标
-    intersectionPoints = [[float(point[0].evalf()), float(point[1].evalf())] for point in intersectionPoints]
-    P = []
-    for point in intersectionPoints:
-        if ((point[0] - startPoint[0]) * (point[0] - endPoint[0])) <= 0 and ((point[1] - startPoint[1]) * (point[1] - endPoint[1])) <= 0:
-            P.append(point)
-    return P
-
-def get_intersectionPoints(points,R,V):
-    if V[0] < points[1, 0] and V[0] > points[0, 0] and V[1] < points[3, 1] and V[1] > points[0, 1]:
-        P=[]
-    else:
-        # 计算交点
-        P = []
-        for n in range(3):
-            intersectionPoints = calculate_circle_line_intersection(V, R, points[n, :], points[n + 1, :])
-            if len(intersectionPoints)!= 0:
-                P.append(intersectionPoints)
-
-        intersectionPoints = calculate_circle_line_intersection(V, R, points[3, :], points[0, :])
-        if len(intersectionPoints) != 0:
-            P.append(intersectionPoints)
-        if len(P)==2:
-            P=np.reshape(P,(-1,2))
-            if P[1,0] == P[0,0] or P[0,1] == P[1,1]:
-                Ctheta = np.dot(P[0,:] - V, P[1,:] - V) / np.linalg.norm(P[0,:] - V) / np.linalg.norm(P[1,:] - V)
-            else:
-                dmin = 1000000
-                for m in range(4):
-                    if np.linalg.norm(points[m, :] - V) < dmin:
-                        dmin = np.linalg.norm(points[m, :] - V)
-                        k = m
-                # 如果在角
-                if (V[0] - points[k, 0]) * (V[0] - P[0,0]) * (V[1] - points[k, 1]) * (V[1] - P[0,1]) > 0 and \
-                        (V[0] - points[k, 0]) * (V[0] - P[1,0]) * (V[1] - points[k, 1]) * (V[1] - P[1,1]) > 0:
-                    pass
-                else:
-                    d1 = np.linalg.norm(points[k, :] - P[0,:])
-                    d2 = np.linalg.norm(points[k, :] - P[1,:])
-                    if d1 > d2:
-                        P[0,:] = points[k, :]
-                    else:
-                        P[1,:] = points[k, :]
-    if P!=[]:
-        P=np.array(P).reshape(-1,2)    
-    return P
-
-
 def getdcos_to_x1(X1,X2,qm,pt,J1,J2):
     l1=np.linalg.norm(pt-qm)
     l2=np.linalg.norm((X1+X2)/2-qm)
@@ -497,10 +471,8 @@ if __name__ == '__main__':
                     # deltay=(7+(32-Robot.roboty[5]/1.5306122e-3/29.71))*1.5306122e-3
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
-                    # flag of obstacle coefficient
-                    flag_obstacle=np.zeros((N_target+2,1))
-                    Ko=np.zeros((2,1))
-                    Ko_tube=np.zeros((N_target,1))
+
+                    
                     xs=[]
                     # for i in range(N_target+2):
                     xs.append(Target_circle[:2])
@@ -514,7 +486,7 @@ if __name__ == '__main__':
                         for j in range(8):
                             if j%3==0:
                                 g.append(X[i, j])
-                                lbg.append(35*1.5306122e-3)
+                                lbg.append(30*1.5306122e-3)
                                 ubg.append(1100*1.5306122e-3 )
                             if j%3==1:
                                 g.append(X[i, j])
@@ -559,23 +531,23 @@ if __name__ == '__main__':
                         g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
                         lbg.append(Target_circle[2]*ddp)
                         ubg.append(200)
-                    # for a in range(len(Robot.robotID)):
-                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                    #         for i in range(N+1):
-                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             for j in range(N_target):
-                    #                 g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
-                    #                 lbg.append(C[2]*ddp)
-                    #                 ubg.append(200)
+                    for a in range(len(Robot.robotID)):
+                        if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
+                            C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
+                            for i in range(N+1):
+                                g.append(ca.norm_2(X[i,:2].T-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                g.append(ca.norm_2(X[i,3:5].T-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
+                                lbg.append(C[2]*2)
+                                ubg.append(200)
+                                for j in range(N_target):
+                                    g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
+                                    lbg.append(C[2]*ddp)
+                                    ubg.append(200)
 
                    
 
@@ -600,7 +572,7 @@ if __name__ == '__main__':
                     x_center=(x_center/(N_target+2)).reshape(1,-1)
                     # update enviroment information
                     # R=70*1.5306122e-3
-                    ktheta=10
+                    ktheta=1
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
                     if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
                         enclose_flag=False
@@ -609,47 +581,41 @@ if __name__ == '__main__':
                         # update the cost function                   
                         # kcos=2
                         Sf=0.5
-                        Smin=0.15
+                        Smin=0.2
                         a=3/(Sf-Smin)
                         b=-a*Smin
                         # x1=np.concatenate(x0)
                         intersectionP=[]
-                        intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
-                        intersectionP.append(Obstacle.calculateP(x1[3:5]).copy())
-                        intersectionP.append(Obstacle.calculateP(x1[6:8]).copy())
-                        intersectionP.append(Obstacle.calculateP(x1[8:10]).copy())
-                        intersectionP.append(Obstacle.calculateP(x1[10:12]).copy())
+                        # intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
+                        # intersectionP.append(Obstacle.calculateP(x1[3:5]).copy())
+                        # intersectionP.append(Obstacle.calculateP(x1[6:8]).copy())
+                        # intersectionP.append(Obstacle.calculateP(x1[8:10]).copy())
+                        # intersectionP.append(Obstacle.calculateP(x1[10:12]).copy())
+
+                        ###circle obstacle intersection
+                        intersectionP.append(Obstacle.calculate_circle_line_intersection(x1[:2]).copy())
+                        intersectionP.append(Obstacle.calculate_circle_line_intersection(x1[3:5]).copy())
+                        intersectionP.append(Obstacle.calculate_circle_line_intersection(x1[6:8]).copy())
+                        intersectionP.append(Obstacle.calculate_circle_line_intersection(x1[8:10]).copy())
+                        intersectionP.append(Obstacle.calculate_circle_line_intersection(x1[10:12]).copy())
                         #the middle point of the tube
                         Dtanh_tube=[]
                         Dx=distence_to_x((x0[:2]+x0[3:5]+x0[8:10]+x0[6:8]+x0[10:12])/(2+N_target),xs,Qr)
-                        
+                        Ko=np.zeros((2,1))
+                        Ko_tube=np.zeros((N_target,1))
                         for f_tube in range(N_target):
-                            Ctheta=np.dot((intersectionP[2+f_tube][0] - x1[6+2*f_tube:8+2*f_tube]), (intersectionP[2+f_tube][1]- x1[6+2*f_tube:8+2*f_tube])) / np.linalg.norm(intersectionP[2+f_tube][0]- x1[6+2*f_tube:8+2*f_tube]) / np.linalg.norm(intersectionP[2+f_tube][1]-x1[6+2*f_tube:8+2*f_tube])
-                            if Ctheta<Sf and flag_obstacle[2+f_tube]==0:
-                            # Ctanh=math.tanh(a*Ctheta+b)
-                            # l1=np.linalg.norm(intersectionP[2+f_tube][0] - x1[6+2*f_tube:8+2*f_tube])
-                            # l2=np.linalg.norm(intersectionP[2+f_tube][1]- x1[6+2*f_tube:8+2*f_tube])
-                            # z1=(intersectionP[2+f_tube][0] - x1[6+2*f_tube:8+2*f_tube])/ l1
-                            # z2=(intersectionP[2+f_tube][1]- x1[6+2*f_tube:8+2*f_tube]) / l2
-                            # DCtheta_vector=(1/l2-Ctanh/l1)*z1+(1/l1-Ctanh/l2)*z2
-                            # DCtanh=a*(1-np.square(math.tanh(1.5)))*DCtheta_vector
-                                DCtanh=get_derivative(x0[6+2*f_tube:8+2*f_tube],intersectionP[2+f_tube],a,b)
-                                DC=min([np.linalg.norm(np.dot(DCtanh,J[2*f_tube:2+2*f_tube,:2])),np.linalg.norm(np.dot(DCtanh,J[2*f_tube:2+2*f_tube,-2:]))])
-                                # KJ=np.linalg.norm(DCtanh)/DC
-                                Ko_tube[f_tube]=np.linalg.norm(Dx)/np.linalg.norm(DC)
-                                flag_obstacle[2+f_tube]=1
+                            DCtanh=get_derivative(x0[6+2*f_tube:8+2*f_tube],intersectionP[2+f_tube],a,b)
+                            Dtanh_tube.append(DCtanh)
+                            Ko_tube[f_tube]=np.linalg.norm(Dx)/np.linalg.norm(Dtanh_tube[f_tube])
 
                         D=getdcos_to_x1(x0[:2],x0[3:5],x0[8:10],xs,J[2:4,:2],J[2:4,-2:])
                         
                         for io in range(2):
-                            Ctheta=np.dot((intersectionP[io][0] - x1[3*io:3*io+2]), (intersectionP[io][1]- x1[3*io:3*io+2])) / np.linalg.norm(intersectionP[io][0]- x1[3*io:3*io+2]) / np.linalg.norm(intersectionP[io][1]-x1[3*io:3*io+2])
-                            if Ctheta<Sf and flag_obstacle[io]==0:
-                                DCtanhx=get_derivative(x0,intersectionP[io],a,b)
+                            DCtanhx=get_derivative(x0,intersectionP[io],a,b)
                             # calculate the derivative
-                                Ko[io]=np.linalg.norm(Dx)/np.linalg.norm(DCtanhx)
-                                flag_obstacle[io]=1
+                            Ko[io]=np.linalg.norm(Dx)/np.linalg.norm(DCtanhx)
                         # for f_tube in range(N_target):
-                        #    
+                        #     DC=np.dot(Dtanh_tube[f_tube],J[2*f_tube:2+2*f_tube,2*io:2*io+2])
                         #     Ko_tube[f_tube,io]=np.linalg.norm(Dx[io])/np.linalg.norm(DC)
                         obj = 0 #### cost
                         for i in range(N):
@@ -659,23 +625,6 @@ if __name__ == '__main__':
                                 Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)
                             for f_tube in range(N_target):
                                 obj = obj -(Ko_tube[f_tube])*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]) )+b)
-                            # if np.linalg.norm(x_center[0]-Target_circle[:2])/1.5037594e-3 <200:
-                            #     obj=obj-1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
-                            # if len(intersectionP[0])==2: 
-                            #     PI=ca.DM(np.array(intersectionP[0]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,:2],PI[1,:]-X[i,:2])/ca.norm_2(PI[0,:]-X[i,:2])/ca.norm_2(PI[1,:]-X[i,:2])+1))
-                            # else:
-                            #     obj=obj-kcos
-                            # if len(intersectionP[1])==2:
-                            #     PI=ca.DM(np.array(intersectionP[1]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,3:5],PI[1,:]-X[i,3:5])/ca.norm_2(PI[0,:]-X[i,3:5])/ca.norm_2(PI[1,:]-X[i,3:5])+1))
-                            # else:
-                            #     obj=obj-kcos
-                            # if len(intersectionP[2])==2:
-                            #     PI=ca.DM(np.array(intersectionP[2]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,8:10],PI[1,:]-X[i,8:10])/ca.norm_2(PI[0,:]-X[i,8:10])/ca.norm_2(PI[1,:]-X[i,8:10])+1))
-                            # else:
-                            #     obj=obj-kcos
                     
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}

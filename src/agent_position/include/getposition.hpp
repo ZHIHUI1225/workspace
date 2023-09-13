@@ -224,21 +224,36 @@ class Visualize //速度控制类
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
 					circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
 					}	
-					if (markerIds[i]>1 && markerIds[i]<6){
+					if (markerIds[i]>0 && markerIds[i]<6){
 						robot_msg::robot_pose obstacle;
 						obstacle.ID.data = markerIds[i];
-						obstacle.position.x=markerCorners[i][0].x ;
-						obstacle.position.y=markerCorners[i][0].y ;
-						obstacle_array.robot_pose_array.push_back(obstacle);
-						Point center(cvRound(obstacle.position.x ), cvRound(obstacle.position.y));
-						//读取半径
-						int radius = cvRound(2);
-						// cv::imshow("cicle",frame_cut);
-						//绘制圆
-						circle(frame_cut, center, radius, Scalar(255, 0, 255), -1);
-						Point center1(cvRound(xnew), cvRound(ynew));
-						radius = cvRound(30);
-						circle(Mask1, center1, radius, Scalar(255, 255, 255), -1); 
+						if (markerIds[i]==1){
+							deltax=8-(xnew-43)/58.375;
+							deltay=7+(32-ynew)/29.71;
+							obstacle.position.x = xnew+deltax;
+							obstacle.position.y = ynew+deltay;
+							int radius = cvRound(60);
+							// cv::imshow("cicle",frame_cut);
+							//绘制圆
+							Point center(cvRound(obstacle.position.x ), cvRound(obstacle.position.y));
+							circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
+							circle(Mask1, center, radius, Scalar(255, 255, 255), -1); 
+						}
+						else
+						{
+							
+							obstacle.position.x=markerCorners[i][0].x ;
+							obstacle.position.y=markerCorners[i][0].y ;
+							obstacle_array.robot_pose_array.push_back(obstacle);
+							Point center(cvRound(obstacle.position.x ), cvRound(obstacle.position.y));//读取半径
+							int radius = cvRound(2);
+							// cv::imshow("cicle",frame_cut);
+							//绘制圆
+							circle(frame_cut, center, radius, Scalar(255, 0, 255), -1);
+							Point center1(cvRound(xnew), cvRound(ynew));
+							radius = cvRound(25);
+							circle(Mask1, center1, radius, Scalar(255, 255, 255), -1); 
+						}
 						
 					}
 			}

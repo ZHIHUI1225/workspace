@@ -62,15 +62,15 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_py: /home/romi/workspace/devel/
 
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose.py: /opt/ros/noetic/lib/genpy/genmsg_py.py
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose.py: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
-/home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose.py: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose.py: /opt/ros/noetic/share/std_msgs/msg/Int8.msg
+/home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose.py: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating Python from MSG robot_msg/robot_pose"
 	cd /home/romi/workspace/build/robot_mag && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genpy/cmake/../../../lib/genpy/genmsg_py.py /home/romi/workspace/src/robot_mag/msg/robot_pose.msg -Irobot_msg:/home/romi/workspace/src/robot_mag/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p robot_msg -o /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg
 
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /opt/ros/noetic/lib/genpy/genmsg_py.py
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg
-/home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /opt/ros/noetic/share/std_msgs/msg/Int8.msg
+/home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg/_robot_pose_array.py: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating Python from MSG robot_msg/robot_pose_array"
 	cd /home/romi/workspace/build/robot_mag && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genpy/cmake/../../../lib/genpy/genmsg_py.py /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg -Irobot_msg:/home/romi/workspace/src/robot_mag/msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -p robot_msg -o /home/romi/workspace/devel/lib/python3/dist-packages/robot_msg/msg

@@ -394,7 +394,7 @@ if __name__ == '__main__':
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
         un= 4 # control step
-        v_max = 0.025
+        v_max = 0.03
         omega_max = 0.8
         rate = rospy.Rate(10)
         x = ca.SX.sym('x')
@@ -529,36 +529,37 @@ if __name__ == '__main__':
                                 g.append(X[i, j])
                                 lbg.append(35* 1.5037594e-3)
                                 ubg.append(430* 1.5037594e-3)
-                    ddp=1.5
+                    
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
-                        lbg.append(L*0.5)
-                        ubg.append(L*0.9)
-                        g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2)
-                        ubg.append(200)
-                        g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*2)
-                        ubg.append(200)
-                        g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
-                        lbg.append(-0.5)
-                        ubg.append(200)
-                        for j in range(N_target):
-                            g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
-                            lbg.append(Target_circle[2]*ddp)
-                            ubg.append(200)
-                        g.append(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*ddp)
-                        ubg.append(200)
-                        g.append(ca.norm_2((X[i,6:8].T+X[i,8:10].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*ddp)
-                        ubg.append(200)
-                        g.append(ca.norm_2((X[i,8:10].T+X[i,10:12].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*ddp)
-                        ubg.append(200)
-                        g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
-                        lbg.append(Target_circle[2]*ddp)
-                        ubg.append(200)
+                        lbg.append(L*0.45)
+                        ubg.append(L*0.8)
+                        # g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*2)
+                        # ubg.append(200)
+                        # g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*2)
+                        # ubg.append(200)
+                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
+                        # lbg.append(-0.5)
+                        # ubg.append(200)
+                        # for j in range(N_target):
+                        #     g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
+                        #     lbg.append(Target_circle[2]*ddp)
+                        #     ubg.append(200)
+                        # g.append(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*ddp)
+                        # ubg.append(200)
+                        # g.append(ca.norm_2((X[i,6:8].T+X[i,8:10].T)/2-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*ddp)
+                        # ubg.append(200)
+                        # g.append(ca.norm_2((X[i,8:10].T+X[i,10:12].T)/2-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*ddp)
+                        # ubg.append(200)
+                        # g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
+                        # lbg.append(Target_circle[2]*ddp)
+                        # ubg.append(200)
+
                     # for a in range(len(Robot.robotID)):
                     #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
                     #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
@@ -600,7 +601,7 @@ if __name__ == '__main__':
                     x_center=(x_center/(N_target+2)).reshape(1,-1)
                     # update enviroment information
                     # R=70*1.5306122e-3
-                    ktheta=10
+                    ktheta=2.5
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
                     if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
                         enclose_flag=False
@@ -609,7 +610,7 @@ if __name__ == '__main__':
                         # update the cost function                   
                         # kcos=2
                         Sf=0.5
-                        Smin=0.15
+                        Smin=0.25
                         a=3/(Sf-Smin)
                         b=-a*Smin
                         # x1=np.concatenate(x0)
@@ -652,30 +653,17 @@ if __name__ == '__main__':
                         #    
                         #     Ko_tube[f_tube,io]=np.linalg.norm(Dx[io])/np.linalg.norm(DC)
                         obj = 0 #### cost
+                        Kt=1000000
+                        ddp=1.6
                         for i in range(N):
                             obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T).T])-\
                                 ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)-\
                                 Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
                                 Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)
+                            obj=obj+Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)+\
+                                Kt*ca.if_else(ca.norm_2(X[i,3:5].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,3:5].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)
                             for f_tube in range(N_target):
-                                obj = obj -(Ko_tube[f_tube])*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]) )+b)
-                            # if np.linalg.norm(x_center[0]-Target_circle[:2])/1.5037594e-3 <200:
-                            #     obj=obj-1*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
-                            # if len(intersectionP[0])==2: 
-                            #     PI=ca.DM(np.array(intersectionP[0]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,:2],PI[1,:]-X[i,:2])/ca.norm_2(PI[0,:]-X[i,:2])/ca.norm_2(PI[1,:]-X[i,:2])+1))
-                            # else:
-                            #     obj=obj-kcos
-                            # if len(intersectionP[1])==2:
-                            #     PI=ca.DM(np.array(intersectionP[1]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,3:5],PI[1,:]-X[i,3:5])/ca.norm_2(PI[0,:]-X[i,3:5])/ca.norm_2(PI[1,:]-X[i,3:5])+1))
-                            # else:
-                            #     obj=obj-kcos
-                            # if len(intersectionP[2])==2:
-                            #     PI=ca.DM(np.array(intersectionP[2]).reshape(-1,2))
-                            #     obj=obj-kcos*ca.tanh(3/(1+Sf)*(ca.dot(PI[0,:]-X[i,8:10],PI[1,:]-X[i,8:10])/ca.norm_2(PI[0,:]-X[i,8:10])/ca.norm_2(PI[1,:]-X[i,8:10])+1))
-                            # else:
-                            #     obj=obj-kcos
+                                obj=obj+Kt*ca.if_else(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
                     
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -704,17 +692,17 @@ if __name__ == '__main__':
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)
                         pub.publish(vel_msg)
-                        d = rospy.Duration(0.001)
+                        d = rospy.Duration(0.0001)
                         rospy.sleep(d)
 
                         
                     else:
-                        # ran_vel=np.zeros((1,4))
-                        # vel_msg = Float64MultiArray(data=ran_vel[0])
-                        # rospy.loginfo(vel_msg)
-                        # pub.publish(vel_msg)
-                        # d = rospy.Duration(0.005)
-                        # rospy.sleep(d)
+                        ran_vel=np.zeros((1,4))
+                        vel_msg = Float64MultiArray(data=ran_vel[0])
+                        rospy.loginfo(vel_msg)
+                        pub.publish(vel_msg)
+                        d = rospy.Duration(0.005)
+                        rospy.sleep(d)
                         object_flag=0
                         enclose_flag=True
                         enclose_flag_pub.publish(enclose_flag)
