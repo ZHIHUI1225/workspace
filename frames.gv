@@ -1,8 +1,0 @@
-digraph G {
-"world" -> "local"[label="Broadcaster: /my_tf_broadcaster\nAverage rate: 10.200 Hz\nMost recent transform: 1685509183.915 ( 0.014 sec old)\nBuffer length: 4.902 sec\n"];
-"world" -> "map"[label="Broadcaster: /my_tf_broadcaster\nAverage rate: 10.204 Hz\nMost recent transform: 1685509183.923 ( 0.007 sec old)\nBuffer length: 4.900 sec\n"];
-edge [style=invis];
- subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
-"Recorded at time: 1685509183.930"[ shape=plaintext ] ;
- }->"world";
-}

@@ -18,6 +18,7 @@ Visualize::Visualize()
 	image_sub = n.subscribe("camera/image",10, &Visualize::imageCallBack,this);
   line_without_QR_pub = n.advertise<sensor_msgs::PointCloud>("/line_without_QR", 1);
   Red_points_pub = n.advertise<sensor_msgs::PointCloud>("/red_points", 1);
+  Red_points34_pub = n.advertise<sensor_msgs::PointCloud>("/red_points34", 1);
   //listener_ = new tf::TransformListener(n, ros::Duration(5.0), true);
   robot_pub_ = n.advertise<robot_msg::robot_pose_array>("/robot", 1);
   obstacle_pub_ = n.advertise<robot_msg::robot_pose_array>("/obstacle", 1);

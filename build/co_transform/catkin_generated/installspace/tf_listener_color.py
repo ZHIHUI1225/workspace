@@ -114,9 +114,9 @@ class TUBE:
 
 #  red points of the tube
 class Redpoints:
-    def __init__(self):
+    def __init__(self,name):
         self.points=PoseArray()
-        self.sub=rospy.Subscriber('/red_points',PointCloud,self.red_callback,queue_size=10)
+        self.sub=rospy.Subscriber(name,PointCloud,self.red_callback,queue_size=10)
     def red_callback(self,msg):
         self.points=PoseArray()
         self.points.header=msg.header
@@ -369,14 +369,17 @@ if __name__ == '__main__':
     try:
         rospy.init_node('tf_listener_node')
         tube=TUBE()
-        RedPoints=Redpoints()
+        RedPoints=Redpoints('/red_points')
+        RedPoints34=Redpoints('/red_points34')
         tf_w2l= TFListener('world','local')
+        tf_w2l34= TFListener('world','local34')
         Frame=frame_image()
         TT=Targe_ID()
         # robot2=Robot2()
         # robot1=Robot1()
         # feature_points_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
         redpoints_pub=rospy.Publisher('feature_points',PoseArray,queue_size=1)
+        redpoints34_pub=rospy.Publisher('feature_points34',PoseArray,queue_size=1)
         # listener_w2l = tf.TransformListener()
         rate = rospy.Rate(50.0)
         while not rospy.is_shutdown() :
@@ -384,8 +387,6 @@ if __name__ == '__main__':
             #     wri = cv2.VideoWriter('zhihui.avi', cv2.VideoWriter_fourcc(*'XVID'), 20, (1229-63,520-44), True)
             #     flag=1
             if  RedPoints.points.poses and Frame.image is not None:
-                # robot2_local=tf_w2l.transform(robot2.p)
-                # robot1_local=tf_w2l.transform(robot1.p)
                 line_local=tf_w2l.transform(RedPoints.points)
                 if line_local:
                     # print(line_local.poses)
@@ -423,27 +424,55 @@ if __name__ == '__main__':
                         redlist.append(pose_stamped)
                     red_points=tf_w2l.transform_back(redlist)
                     redpoints_pub.publish(red_points)
-                # for pose in feature_points_local.poses:
-                # L_real=200* 1.5037594e-3#the length of tube
-                # r1=np.array([400* 1.5037594e-3,300* 1.5306122e-3 ])
-                # r2=np.array([550* 1.5037594e-3,300* 1.5306122e-3 ])
-                # Tube=tubeshape(length=L_real,p1=r1,p2=r2)
-                # xt=np.array(Tube.get_points(N_target)).reshape(-1,1)
-                # center=(int(r1[0]/1.5037594e-3),int(r1[1]/1.5306122e-3))
-                # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                # center=(int(r2[0]/1.5037594e-3),int(r2[1]/1.5306122e-3))
-                # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
-                # for i in range(0,len(xt),2):
-                #     center=(int(xt[i]/1.5037594e-3),int(xt[i+1]/1.5306122e-3))
-                #     cv2.circle(Frame.image, center, 3, (255, 0, 50*i), -1)
                     if red_points is not None:
                         for pose in red_points.poses:
                             center=(int(pose.position.x),int(pose.position.y))
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
-                    # wri.write(Frame.image)
-                    # cv2.imshow("Redpoints",Frame.image)
+
+            if  RedPoints34.points.poses and Frame.image is not None:
+                line_local34=tf_w2l.transform(RedPoints34.points)
+                if line_local34:
+                    # print(line_local.poses)
+                    sorted_line34= sorted(line_local34.poses, key=lambda pose: pose.position.x)
+                    #calculate length
+                    L=0
+                    k=0
+                    xlist=[]
+                    ylist=[]
+                    redlist=[]
+                    nu=0
+                    for i in range(1, len(sorted_line34)):
+                        l = math.hypot(sorted_line34[k].position.x - sorted_line34[i].position.x, sorted_line34[k].position.y - sorted_line34[i].position.y)
+                        if l < 20:
+                            xlist.append(sorted_line34[i].position.x)
+                            ylist.append(sorted_line34[i].position.y)           
+                        else:
+                            if len(xlist)!=0:
+                                pose_stamped = PoseStamped()
+                                pose_stamped.header.frame_id = 'local34'
+                                pose_stamped.pose.position.x=sum(xlist)/len(xlist)
+                                pose_stamped.pose.position.y=sum(ylist)/len(ylist)
+                                redlist.append(pose_stamped)
+                                nu=nu+1
+                            xlist.clear()
+                            ylist.clear()
+                        if nu==3:
+                            break
+                        k = i
+                    if nu==2 and len(xlist)!=0:
+                        pose_stamped = PoseStamped()
+                        pose_stamped.header.frame_id = 'local34'
+                        pose_stamped.pose.position.x=sum(xlist)/len(xlist)
+                        pose_stamped.pose.position.y=sum(ylist)/len(ylist)
+                        redlist.append(pose_stamped)
+                    red_points34=tf_w2l.transform_back(redlist)
+                    redpoints34_pub.publish(red_points34)
+                    if red_points34 is not None:
+                        for pose in red_points34.poses:
+                            center34=(int(pose.position.x),int(pose.position.y))
+                            cv2.circle(Frame.image, center34, 2, (0, 0, 255), -1)
+                    # cv2.imshow('red',Frame.image)
                     # cv2.waitKey(1)
-                    
             rate.sleep()
 
     except rospy.ROSInterruptException:

@@ -83,5 +83,6 @@
         "variant": "cpp",
         "bit": "cpp",
         "charconv": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/romi/workspace/src/starlaunch"
 }

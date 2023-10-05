@@ -1,19 +1,54 @@
 <launch>
+	<arg name="feature1" value="/feature_points"/>
+	<arg name="feature2" value="/feature_points34"/>
+	<arg name="QRID1" value="1"/>
+	<arg name="QRID2" value="2"/>
+	<!-- <arg name="system1" value="1"/>
+	<arg name="system2" value="2"/> -->
 	<node pkg="camera_drive" type="camera_node" name="camera_node" />
 	<node pkg="agent_position" type="getposition" name="getposition" />
 	<node pkg="learning_tf" type="tf_broadcaster" name="tf_broadcaster" />
-	<node pkg="record" type="recordvideo.py" name="recordvideo" />
 	<node pkg="co_transform" type="tf_listener_color.py" name="tf_listener_color" output="screen"/>
+	<!-- <node pkg="record" type="recordvideo.py" name="recordvideo" /> -->
+	<!-- <group ns="system1"> -->
+	<node pkg="record" type="recordvideo.py" name="recordvideo1" clear_params="true" >
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node>
+
+	<!-- <param name="system" value="$(arg system1)"/> -->
+	<!-- </group> -->
+
+	<!-- <group ns="system2"> -->
+	<node pkg="record" type="recordvideo.py" name="recordvideo2" clear_params="true" >
+	<param name="feature" value="$(arg feature2)"/>
+	<param name="QRID" value="$(arg QRID2)"/>
+	</node>
+	<!-- </group> -->
 	<!-- <node pkg="mpc" type="mpc_multipoints.py" name="mpc_multipoints" output="screen"/> -->
 	<!-- <node pkg="mpc" type="Jmatrix.py" name="Jmatrix" output="screen"/> -->
+
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/>  -->
+
+	<node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node> 
+
+	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_transport1" output="screen" clear_params="true"> 
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node> 
 	<!-- <node pkg="mpc" type="mpc_angle_avoidance.py" name="mpc_angle_avoidance" output="screen"/>  -->
-	<node pkg="mpc" type="mpc_softconstraints.py" name="mpc_softconstraints" output="screen"/> 
+	<!-- <node pkg="mpc" type="mpc_softconstraints.py" name="mpc_softconstraints" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_weights.py" name="mpc_weights" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_circleobstacle.py" name="mpc_circleobstacle" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_EGO.py" name="mpc_EGO" output="screen"/>  -->
 	<!-- <node pkg="pulling" type="mpc_pulling.py" name="mpc_pulling" output="screen"/>  -->
-	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_pulling_avoidance" output="screen"/> 
+
+	<!-- <node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_pulling_avoidance" output="screen"/>  -->
+
+
 	<!-- <node pkg="co_transform" type="tf_listener.py" name="tf_listener" output="screen"/>
 	<node pkg="co_transform" type="low_pass_filter.py" name="low_pass_filter" output="screen"/>
 	<node pkg="mpc" type="mpc_filter.py" name="mpc_filter" output="screen"/>  -->

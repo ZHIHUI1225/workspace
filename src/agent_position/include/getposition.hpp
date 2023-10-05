@@ -79,7 +79,7 @@ class Visualize //速度控制类
     ros::NodeHandle n; // 节点句柄
 
 	ros::Subscriber image_sub;
-	ros::Publisher robot_pub_,line_without_QR_pub,Red_points_pub,obstacle_pub_ ;
+	ros::Publisher robot_pub_,line_without_QR_pub,Red_points_pub,obstacle_pub_ ,Red_points34_pub;
 	robot_msg::robot_pose robot_;
 	// sensor_msgs::PointCloud poly_pc_;
 	
@@ -150,15 +150,24 @@ class Visualize //速度控制类
 			0.0, 0.0, 1);
 
 		double fx, fy, cx, cy, k1, k2, k3, p1, p2;
-		fx = 1.18346606e+03;
-		fy = 1.18757422e+03;
-		cx = 3.14407234e+02;
-		cy = 2.38823696e+02;
-		k1 = -0.51328742;
-		k2 = 0.33232725;
-		p1 = 0.01683581;
-		p2 = -0.00078608;
-		k3 = -0.1159959;
+		// fx = 1.18346606e+03;
+		// fy = 1.18757422e+03;
+		// cx = 3.14407234e+02;
+		// cy = 2.38823696e+02;
+		// k1 = -0.51328742;
+		// k2 = 0.33232725;
+		// p1 = 0.01683581;
+		// p2 = -0.00078608;
+		// k3 = -0.1159959;
+		fx= 2.3003531127160736e+03;//RGB 
+		cx= 9.5950000000000000e+02;
+		fy= 2.3003531127160736e+03;
+		cy= 5.3950000000000000e+02;
+		k1 = 3.5007023317793756e-01;
+		k2= -3.7943939452733586e+00;
+		p1= 0;
+		p2= 0;
+		k3 = 8.0266257615514434e+00;
 		cv::Mat distCoeffs = (cv::Mat_<float>(5, 1) << k1, k2, p1, p2, k3);
 		std::vector<cv::Vec3d> rvecs, tvecs;
 	
@@ -181,6 +190,7 @@ class Visualize //速度控制类
 	double deltay;
 	double xnew;
 	double ynew;
+	double robotmatrix[4][2];
 		if (markerIds.size() > 0) 
 		{	cv::aruco::drawDetectedMarkers(frame_cut, markerCorners, markerIds);
 			for (int i = 0; i < rvecs.size(); ++i) {
@@ -190,7 +200,7 @@ class Visualize //速度控制类
 				xnew=(markerCorners[i][0].x + markerCorners[i][1].x + markerCorners[i][2].x + markerCorners[i][3].x)/4;
 				ynew=(markerCorners[i][0].y + markerCorners[i][1].y + markerCorners[i][2].y + markerCorners[i][3].y)/4;
 				
-				if (markerIds[i]>10 && markerIds[i]<13){
+				if (markerIds[i]>10 && markerIds[i]<15){
 					//读取圆心
 					// deltax=20+(44-robot_new.position.x)/25.65;
 					// deltay=7+(32-robot_new.position.y)/29.71;
@@ -200,6 +210,8 @@ class Visualize //速度控制类
 					robot_new.position.y = ynew+deltay;
 					robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
 					robot_array_new.robot_pose_array.push_back(robot_new);
+					robotmatrix[markerIds[i]-11][0]=robot_new.position.x ;
+					robotmatrix[markerIds[i]-11][1]=robot_new.position.y ;
 					Point center(cvRound(robot_new.position.x ), cvRound(robot_new.position.y));
 					//读取半径
 					int radius = cvRound(40);
@@ -251,7 +263,7 @@ class Visualize //速度控制类
 							//绘制圆
 							circle(frame_cut, center, radius, Scalar(255, 0, 255), -1);
 							Point center1(cvRound(xnew), cvRound(ynew));
-							radius = cvRound(25);
+							radius = cvRound(20);
 							circle(Mask1, center1, radius, Scalar(255, 255, 255), -1); 
 						}
 						
@@ -262,10 +274,59 @@ class Visualize //速度控制类
 	// circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
 	robot_pub_.publish(robot_array_new);
 	obstacle_pub_.publish(obstacle_array);
-	Mat imgAddMask = frame_cut.clone();
-	imgAddMask .setTo(255, Mask1);
+	
+	//give the mask of the system to detetct red points
+	cv::Mat mask12 = cv::Mat::zeros(frame_cut.rows, frame_cut.cols, CV_8UC1);
+	double Ke;
+	double aa=100;
+	double rx1,ry1,rx2,ry2;
+	if (robotmatrix[1][1]==robotmatrix[0][1])
+	{
+		rx1=robotmatrix[1][0];
+		rx2=robotmatrix[0][0];
+		if (robotmatrix[1][0]>robotmatrix[0][0])
+		{
+			
+			ry1=robotmatrix[1][1]-aa;
+			ry2=-aa+robotmatrix[0][1];
+		}
+		else{
+			ry1=robotmatrix[1][1]+aa;
+			ry2=aa+robotmatrix[0][1];
+		}
+	}
+	else{
+		Ke=-(robotmatrix[1][0]-robotmatrix[0][0])/(robotmatrix[1][1]-robotmatrix[0][1]);
+	if (robotmatrix[1][1]>=robotmatrix[0][1]){
+		rx1=aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[1][0];
+		rx2=aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[0][0];
+		
+	}
+	else
+	{
+		rx1=-aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[1][0];
+		rx2=-aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[0][0];
+		
+	}
+	ry1=robotmatrix[1][1]+Ke*(rx1-robotmatrix[1][0]);
+	ry2=Ke*(rx2-robotmatrix[0][0])+robotmatrix[0][1];
+	}
+    // Define the polygon points
+    std::vector<cv::Point> points = {cv::Point(robotmatrix[0][0], robotmatrix[0][1]), cv::Point(robotmatrix[1][0], robotmatrix[1][1]), cv::Point(rx1, ry1), cv::Point(rx2, ry2)};
+    std::vector<std::vector<cv::Point>> all_points = {points};
+
+    // Draw the polygon on the mask
+    cv::fillPoly(mask12, all_points, cv::Scalar(255));
+
+    // Apply the mask on the image
+    cv::Mat masked_image;
+    cv::bitwise_and(frame_cut, frame_cut, masked_image, mask12 = mask12);
+	cv::imshow("Masked Image", masked_image);
 
 	// red color detection
+
+	Mat imgAddMask = masked_image.clone();
+	imgAddMask .setTo(255, Mask1);
     cv::Mat hsv_frame;
     cv::cvtColor(imgAddMask, hsv_frame, cv::COLOR_BGR2HSV);
 	
@@ -300,140 +361,93 @@ for (auto point : red_points.points) {
 }
 
 	Red_points_pub.publish(red_points);
-	cv::imshow("red color",red);
+	// cv::imshow("red color",red);
+
+// robot 34  red points detect
+//give the mask of the system to detetct red points
+	cv::Mat mask34 = cv::Mat::zeros(frame_cut.rows, frame_cut.cols, CV_8UC1);
+	if (robotmatrix[3][1]==robotmatrix[2][1])
+	{
+		rx1=robotmatrix[3][0];
+		rx2=robotmatrix[2][0];
+		if (robotmatrix[3][0]>robotmatrix[2][0])
+		{
+			
+			ry1=robotmatrix[3][1]-aa;
+			ry2=-aa+robotmatrix[2][1];
+		}
+		else{
+			ry1=robotmatrix[3][1]+aa;
+			ry2=aa+robotmatrix[2][1];
+		}
+	}
+	else{
+		Ke=-(robotmatrix[3][0]-robotmatrix[2][0])/(robotmatrix[3][1]-robotmatrix[2][1]);
+	if (robotmatrix[3][1]>=robotmatrix[2][1]){
+		rx1=aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[3][0];
+		rx2=aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[2][0];
+	}
+	else
+	{
+		rx1=-aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[3][0];
+		rx2=-aa*std::sqrt(1/(1+Ke*Ke))+robotmatrix[2][0];
+	}
+	ry1=robotmatrix[3][1]+Ke*(rx1-robotmatrix[3][0]);
+	ry2=Ke*(rx2-robotmatrix[2][0])+robotmatrix[2][1];
+	}
+    // Define the polygon points
+    std::vector<cv::Point> points34 = {cv::Point(robotmatrix[2][0], robotmatrix[2][1]), cv::Point(robotmatrix[3][0], robotmatrix[3][1]), cv::Point(rx1, ry1), cv::Point(rx2, ry2)};
+    std::vector<std::vector<cv::Point>> all_points34 = {points34};
+
+    // Draw the polygon on the mask
+    cv::fillPoly(mask34, all_points34, cv::Scalar(255));
+
+    // Apply the mask on the image
+    cv::Mat masked_image34;
+    cv::bitwise_and(frame_cut, frame_cut, masked_image34, mask34 = mask34);
+	// cv::imshow("Masked Image34", masked_image34);
+	// red color detection
+
+	Mat imgAddMask34 = masked_image34.clone();
+	imgAddMask34 .setTo(255, Mask1);
+  
+    cv::cvtColor(imgAddMask34, hsv_frame, cv::COLOR_BGR2HSV);
+
+    cv::Mat red_mask34;
+    cv::inRange(hsv_frame, low_red, high_red, red_mask34);
+
+    cv::Mat red34;
+    cv::bitwise_and(frame_cut,frame_cut, red34, red_mask34);
+	sensor_msgs::PointCloud red_points34;
+	for (int ro = 0; ro < red34.rows; ro++)
+	{
+		for (int co = 0; co <red34.cols; co++)
+		{
+			
+			Vec3b& color=red34.at<Vec3b>(ro, co);
+			if (color[1]>low_red[1]-1)
+			{
+				geometry_msgs::Point32 p;
+				p.x=co;
+				p.y=ro;
+				p.z=0;
+				red_points34.points.push_back(p);	
+			}
+			
+		}
+	}
+for (auto point : red_points34.points) {
+    circle(red34, Point(point.x, point.y), 1, Scalar(255, 255, 255), -1);
+}
+	Red_points34_pub.publish(red_points34);
+	// cv::imshow("red color34",red34);
 
 	Mat imgAddMask1 = thre.clone();
 	cv::add(Mask1,thre,imgAddMask1);
-	//cv::imshow("multiply", imgAddMask1);
+
 	//逆转二值图
 	Mat thre_inv;
 	bitwise_not(imgAddMask1,thre_inv);
-	// imshow("thre_inv",thre_inv);
-	//连通域
-	// RNG rng(10086);
-	// Mat outr;
-	// int number = connectedComponents(thre_inv, outr, 8, CV_16U);  //统计图像中连通域的个数
-
-	// // 计算每个连通组件的大小
-	// std::vector<int> sizes(number, 0);
-	// for (int i = 0; i < outr.rows; i++) {
-	// 	for (int j = 0; j < outr.cols; j++) {
-	// 		int label = outr.at<uint16_t>(i, j);
-		
-	// 		if (label > 0) {
-	// 			sizes[label] += 1;
-	// 			//  cout<<"label"<<label<<endl;
-	// 		}
-	// 	}
-	// }
-
-	// // 找到最大的连通组件
-	// int max_label = 1;
-	// int max_size = sizes[1];
-	// for (int i = 2; i <number; ++i) {
-	// 	if (sizes[i] > max_size) {
-	// 		max_label = i;
-	// 		max_size = sizes[i];
-	// 	}
-	// }
-
-
-	// Mat connect = Mat::zeros(thre.size(), frame_cut.type());
-	// int w = connect.cols;
-	// int h = connect.rows;
-	// Vec3b color=Vec3b(rng.uniform(0,256),rng.uniform(0,256),rng.uniform(0,256));
-	// // sensor_msgs::PointCloud pc_without_QR_;
-	// for (int row = 0; row < h; row++)
-	// {
-	// 	for (int col = 0; col < w; col++)
-	// 	{
-	// 		int label = outr.at<uint16_t>(row, col);
-	// 		geometry_msgs::Point32 p;
-	// 		if (label == max_label)  
-	// 		{
-	// 			connect.at<Vec3b>(row, col)=color;
-	// 			p.x=col;
-	// 			p.y=row;
-	// 			p.z=0;
-	// 			// pc_without_QR_.points.push_back(p);	
-	// 		}
-	// 	}
-	// }
-	//   //骨干提取
-    //   Mat skel = skeletonization(connect);
-    // 	// imshow("Skeleton Image", skel);
-    //     //曲线拟合
-    //     //输入拟合点
-    //     std::vector<cv::Point> points;
-	// 	sensor_msgs::PointCloud pc_without_QR_;
-    //     int rowmin=h;
-    //     int colmin=w;
-    //     int colmax=0;
-    //     for (int col = 0; col < w; col++)
-    //     {
-    //         for (int row = 0; row < h; row++)
-    //         {
-    //             if (connect.at<Vec3b>(row, col) == color)  
-	// 			// if (skel.at<uchar>(row, col) == 255) 
-    //             {
-	// 				geometry_msgs::Point32 p;
-    //                 points.push_back(cv::Point(col, row));
-	// 				p.x=col;
-	// 				p.y=row;
-	// 				p.z=0;
-	// 				pc_without_QR_.points.push_back(p);
-    //                 if (row<rowmin)
-    //                 {
-    //                     rowmin=row;
-    //                 }
-    //                 if(col<colmin)
-    //                 {
-    //                     colmin=col;
-    //                 }
-    //                 if(col>colmax)
-    //                 {
-    //                     colmax=col;
-    //                 }
-    //             }
-                
-    //         }
-    //     }
-	// 	line_without_QR_pub.publish(pc_without_QR_);
-	// 	cv::Mat A;
-    //     int Num=6;
-    //     polynomial_curve_fit(points, Num, A);
-        //std::cout << "A = " << A << std::endl;
-        //计算曲线拟合的点
-        // std::vector<cv::Point> points_fitted;
-        // for (int i=0; i < 100; ++i)
-        // {
-        //     Point2d ipt;
-        //     ipt.x = i*(colmax-colmin)/99+colmin;
-        //     ipt.y = 0;
-        //     for (int j = 0; j < Num + 1; ++j)
-        //     {
-        //     ipt.y +=A.at<double>(j, 0)*pow(ipt.x, j); // 计算拟合函数的值
-        //     }
-        //     points_fitted.push_back(ipt);
-        //     // Point center(cvRound(points_fitted[i].x), cvRound(points_fitted[i].y));
-        //     // cv::circle(frame, center, 3, cv::Scalar(0, 255, 255), -1);
-        // }
-
-		// int k=0;
-		// std::vector<cv::Point>  pc_10;
-		// for (int i = 1; i < points.size(); ++i)
-		// {
-		// double l = hypot(points[k].x - points[i].x, points[k].y - points[i].y);
-		// if (l > 5.0) { 
-		// 	Point2d ipt;
-		// 	ipt.x=points[k].x;
-		// 	ipt.y=points[k].y;
-		// 	pc_10.push_back(ipt);
-		// 	k = i;
-		// 	Point center(cvRound(ipt.x), cvRound(ipt.y));
-        //     // cv::circle(frame_cut, center, 3, cv::Scalar(0, 0, 255), -1);
-		// }
-		// }
 		imshow("points",frame_cut);
 		waitKey(3);
 	}

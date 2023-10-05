@@ -18,10 +18,10 @@ import casadi as ca
 import casadi.tools as ca_tools
 import time
 from numpy import linalg as LA
+import csv
 # import env
 # from draw import Draw_MPC_two_agents_withtube
 import matplotlib.pyplot as plt
-import csv
 from std_msgs.msg import Float64MultiArray
 #import Staticcontrol
 #import LOScontrol
@@ -32,6 +32,7 @@ from cv_bridge import CvBridge
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 from sympy import symbols, Eq, solve
+import pandas as pd
 # from dlodynamics import dlodynamics
 # from Dynamicupdateplot import DynamicUpdate
 
@@ -40,12 +41,13 @@ wheel_diameter = 31e-3  # m
 l_center=11* 1.5037594e-3
 L=200* 1.5037594e-3 #the length of tube
 N_target=3 # feature points number
-# plt.ion()
+plt.ion()
+
 class Point_tube:
-    def __init__(self):
+    def __init__(self,pointname):
         self.feature_point=PointCloud()
         self.middlepoint=Point32()
-        self.sub = rospy.Subscriber('/feature_points', PoseArray, self.tube_callback,queue_size=10)
+        self.sub = rospy.Subscriber(pointname, PoseArray, self.tube_callback,queue_size=10)
     def tube_callback(self, msg): # tube msg
         self.feature_point=PointCloud()
         for pose in msg.poses:
@@ -187,13 +189,13 @@ def my_func(x):
         return x
 
 class Targe_ID:
-    def __init__(self):
+    def __init__(self,QRID):
         self.flag=False
         self.transport_flag=False
         self.ID=0
-        self.sub=rospy.Subscriber('goflag',Bool,self.flag_callback,queue_size=10)
-        self.subID=rospy.Subscriber('TargetID',Int8,self.ID_callback,queue_size=10)
-        self.transport_sub=rospy.Subscriber('transportflag',Bool,self.transport_flag_callback,queue_size=10)
+        self.sub=rospy.Subscriber('goflag'+str(QRID),Bool,self.flag_callback,queue_size=10)
+        self.subID=rospy.Subscriber('TargetID'+str(QRID),Int8,self.ID_callback,queue_size=10)
+        self.transport_sub=rospy.Subscriber('transportflag'+str(QRID),Bool,self.transport_flag_callback,queue_size=10)
     def flag_callback(self,msg):
         self.flag=msg.data
     def transport_flag_callback(self,msg):
@@ -253,8 +255,38 @@ class tubeshape():
                 points.append(y[:,i*int(len(y[0,:])/(n+1))])
         return points
 
+class Plotupdate():
+    def __init__(self,name,yname):
+        #Set up plot
+        self.figure, self.ax = plt.subplots()
+        self.line,=self.ax.plot([],[])
+        self.starttime= time.time()
+        self.xdata=[]
+        self.ax.set_autoscaley_on(True)
+        self.ax.grid()
+        self.ax.set_xlabel('time(s)')
+        self.ax.set_ylabel(yname)
+        self.figure.suptitle(name)
+        self.ax.legend(loc='upper left')
+    def on_running(self, error):
+        timec = time.time()
+        self.xdata.append(timec-self.starttime)
+        self.line.set_xdata(self.xdata)
+        self.line.set_ydata(error)
+        self.ax.relim()
+        self.ax.autoscale_view()
+        #We need to draw *and* flush
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+    def save_plot(self,figname,dataname):
+        plt.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        dp.writerow(self.line.get_xdata())
+        dp.writerow(self.line.get_ydata())   
+        fp.close() 
 
-class PlotUpdate():
+class PlotUpdate2():
     #Suppose we know the x range
     #min_x = 0
     #max_x = 300
@@ -266,6 +298,8 @@ class PlotUpdate():
         self.lines1=[]
         self.lines2=[]
         self.number=N
+        self.starttime= time.time()
+        self.xdata=[]
         for i in range(self.number):
             line, = self.ax1.plot([],[],label=str(i+1)) #error_x
             self.lines1.append(line)
@@ -287,11 +321,12 @@ class PlotUpdate():
     def on_running(self, error_x, error_y):
         #Update data (with the new _and_ the old points)
         for i in range(self.number):
-            xdata=np.arange(0,len(error_x))
-            self.lines1[i].set_xdata(xdata)
+            timec = time.time()
+            self.xdata.append(timec-self.starttime)
+            self.lines1[i].set_xdata(self.xdata)
             self.lines1[i].set_ydata(error_x)
             ydata=np.arange(0,len(error_y))
-            self.lines2[i].set_xdata(ydata)
+            self.lines2[i].set_xdata(self.xdata)
             self.lines2[i].set_ydata(error_y)
         #Need both of these in order to rescale
         self.ax1.relim()
@@ -301,6 +336,16 @@ class PlotUpdate():
         #We need to draw *and* flush
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+    def save_plot(self,figname,dataname):
+        plt.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        dp.writerow(self.lines1[self.number-1].get_xdata())
+        dp.writerow(self.lines1[self.number-1].get_ydata())
+        dp.writerow(self.lines2[self.number-1].get_xdata())
+        dp.writerow(self.lines2[self.number-1].get_ydata())
+        fp.close()
+        # self.figure.save('error.png')
 
 
 def calculate_circle_line_intersection(center, radius, startPoint, endPoint):
@@ -382,13 +427,16 @@ def distence_to_x(pv,pt,Qr):
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
+        QRID=rospy.get_param('~QRID')
+        pointname=rospy.get_param('~feature')
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
-        enclose_flag_pub=rospy.Publisher('encloseflag',Bool,queue_size=10)
+        enclose_flag_pub=rospy.Publisher('encloseflag'+str(QRID),Bool,queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
-        feature=Point_tube()
-        Targe_id=Targe_ID()
-        model_errorplot=PlotUpdate(1)
+        feature=Point_tube(pointname)
+        Targe_id=Targe_ID(QRID)
+        # Errorplot=PlotUpdate2(1)
+       
         Obstacle=Obstacle_QR()
         # Frame=frame_image()
         T = 0.15# sampling time [s]
@@ -445,7 +493,7 @@ if __name__ == '__main__':
         ff = ca.Function('ff', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
 
         Q = 1*np.eye(2*N_target)
-        R=0.001*np.eye(4)
+        R=0.00001*np.eye(4)
         Qr=1*np.eye(2)
         lbx = []
         ubx = []
@@ -476,8 +524,10 @@ if __name__ == '__main__':
         # t_c = [t0] # for the time
         xx = []
         x_next=None
-        model_error_x=[]
-        model_error_y=[]
+        error_x=[]
+        error_y=[]
+        error_d=[]
+        error_theta=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
         r_object=32
@@ -497,6 +547,9 @@ if __name__ == '__main__':
                     # deltay=(7+(32-Robot.roboty[5]/1.5306122e-3/29.71))*1.5306122e-3
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
+                    #plot 
+                    Disterror=Plotupdate('Distance'+str(Targe_id.ID),'distance error (m)')
+                    Thetaerror=Plotupdate('Theta'+str(Targe_id.ID),'thera error (rad)')
                     # flag of obstacle coefficient
                     flag_obstacle=np.zeros((N_target+2,1))
                     Ko=np.zeros((2,1))
@@ -527,58 +580,13 @@ if __name__ == '__main__':
                                 ubg.append(1100*1.5306122e-3 )
                             else:
                                 g.append(X[i, j])
-                                lbg.append(35* 1.5037594e-3)
+                                lbg.append(40* 1.5037594e-3)
                                 ubg.append(430* 1.5037594e-3)
                     
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
                         lbg.append(L*0.45)
                         ubg.append(L*0.8)
-                        # g.append(ca.norm_2(X[i,:2].T-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*2)
-                        # ubg.append(200)
-                        # g.append(ca.norm_2(X[i,3:5].T-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*2)
-                        # ubg.append(200)
-                        # g.append(ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2))
-                        # lbg.append(-0.5)
-                        # ubg.append(200)
-                        # for j in range(N_target):
-                        #     g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-Target_circle[:2]))
-                        #     lbg.append(Target_circle[2]*ddp)
-                        #     ubg.append(200)
-                        # g.append(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*ddp)
-                        # ubg.append(200)
-                        # g.append(ca.norm_2((X[i,6:8].T+X[i,8:10].T)/2-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*ddp)
-                        # ubg.append(200)
-                        # g.append(ca.norm_2((X[i,8:10].T+X[i,10:12].T)/2-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*ddp)
-                        # ubg.append(200)
-                        # g.append(ca.norm_2((X[i,10:12].T+X[i,3:5].T)/2-Target_circle[:2]))
-                        # lbg.append(Target_circle[2]*ddp)
-                        # ubg.append(200)
-
-                    # for a in range(len(Robot.robotID)):
-                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                    #         for i in range(N+1):
-                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2((X[i,6:8].T+X[i,10:12].T+X[i,8:10].T)/3-C[:2]))
-                    #             lbg.append(C[2]*2)
-                    #             ubg.append(200)
-                    #             for j in range(N_target):
-                    #                 g.append(ca.norm_2(X[i,6+2*j:8+2*j].T-C[:2]))
-                    #                 lbg.append(C[2]*ddp)
-                    #                 ubg.append(200)
-
-                   
 
 
                 if object_flag==1:
@@ -599,9 +607,17 @@ if __name__ == '__main__':
                     #     x_center=x_center+x0[6+2*i:8+2*i]
                     x_center=x0[:2]+x0[3:5]+x0[8:10]+x0[6:8]+x0[10:12]
                     x_center=(x_center/(N_target+2)).reshape(1,-1)
+                    cos_theta=np.dot(-x0[8:10]+Target_circle[:2],(x0[:2]+x0[3:5])/2-x0[8:10])/np.linalg.norm(-x0[8:10]+Target_circle[:2])/np.linalg.norm((x0[:2]+x0[3:5])/2-x0[8:10])
                     # update enviroment information
                     # R=70*1.5306122e-3
-                    ktheta=2.5
+                    ktheta=1.5
+                    error_x.append( Target_circle[0]-x_center[0][0])
+                    error_y.append( Target_circle[1]-x_center[0][1])
+                    error_d.append(np.linalg.norm(Target_circle[:2]-x_center[0]))
+                    error_theta.append(math.acos(np.dot(Target_circle[:2]-x1[8:10],(x1[:2]+x1[3:5])/2-x1[8:10])/np.linalg.norm(Target_circle[:2]-x1[8:10])/np.linalg.norm((x1[:2]+x1[3:5])/2-x1[8:10])))
+                    # Errorplot.on_running(model_error_x,model_error_y)
+                    Disterror.on_running(error_d)
+                    Thetaerror.on_running(error_theta)
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
                     if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
                         enclose_flag=False
@@ -610,7 +626,7 @@ if __name__ == '__main__':
                         # update the cost function                   
                         # kcos=2
                         Sf=0.5
-                        Smin=0.25
+                        Smin=0.2
                         a=3/(Sf-Smin)
                         b=-a*Smin
                         # x1=np.concatenate(x0)
@@ -653,16 +669,17 @@ if __name__ == '__main__':
                         #    
                         #     Ko_tube[f_tube,io]=np.linalg.norm(Dx[io])/np.linalg.norm(DC)
                         obj = 0 #### cost
-                        Kt=1000000
-                        ddp=1.6
+                        Kt=10000
+                        ddp=1.5
                         for i in range(N):
                             obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T).T])-\
                                 ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)-\
                                 Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
-                                Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)
-                            obj=obj+Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)+\
+                                Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)+\
+                                Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)+\
                                 Kt*ca.if_else(ca.norm_2(X[i,3:5].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,3:5].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)
                             for f_tube in range(N_target):
+                                obj=obj-Ko_tube[f_tube]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]))+b)
                                 obj=obj+Kt*ca.if_else(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
                     
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
@@ -697,6 +714,10 @@ if __name__ == '__main__':
 
                         
                     else:
+                        # save data
+                        # Errorplot.save_plot('error.png','error.csv')
+                        Disterror.save_plot('distanceerror'+str(Targe_id.ID)+'.png','distance'+str(Targe_id.ID)+'.csv')
+                        Thetaerror.save_plot('thetaerror'+str(Targe_id.ID)+'.png','theta'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

@@ -207,19 +207,19 @@ class Targetzone():
     def __init__(self):
         self.target=Point32()
         self.flag=0
-        rospy.Subscriber('Targetzone',Point32,self.Callback,queue_size=10)
+        rospy.Subscriber('Targetzone'+str(QRID),Point32,self.Callback,queue_size=10)
     def Callback(self,msg):
         self.target=msg
         self.flag=1
 
 class Targe_ID:
-    def __init__(self):
+    def __init__(self,QRID):
         self.flag=False
         self.enclose_flag=False
         self.ID=0
-        self.sub=rospy.Subscriber('goflag',Bool,self.flag_callback,queue_size=10)
-        self.enclose_sub=rospy.Subscriber('encloseflag',Bool,self.enclose_flag_callback,queue_size=10)
-        self.subID=rospy.Subscriber('TargetID',Int8,self.ID_callback,queue_size=10)
+        self.sub=rospy.Subscriber('goflag'+str(QRID),Bool,self.flag_callback,queue_size=10)
+        self.enclose_sub=rospy.Subscriber('encloseflag'+str(QRID),Bool,self.enclose_flag_callback,queue_size=10)
+        self.subID=rospy.Subscriber('TargetID'+str(QRID),Int8,self.ID_callback,queue_size=10)
     def flag_callback(self,msg):
         self.flag=msg.data
     def enclose_flag_callback(self,msg):
@@ -227,7 +227,38 @@ class Targe_ID:
     def ID_callback(self,msg):
         self.ID=int(msg.data)
 
-class PlotUpdate():
+class Plotupdate():
+    def __init__(self,name,yname):
+        #Set up plot
+        self.figure, self.ax = plt.subplots()
+        self.line,=self.ax.plot([],[])
+        self.starttime= time.time()
+        self.xdata=[]
+        self.ax.set_autoscaley_on(True)
+        self.ax.grid()
+        self.ax.set_xlabel('time(s)')
+        self.ax.set_ylabel(yname)
+        self.figure.suptitle(name)
+        self.ax.legend(loc='upper left')
+    def on_running(self, error):
+        timec = time.time()
+        self.xdata.append(timec-self.starttime)
+        self.line.set_xdata(self.xdata)
+        self.line.set_ydata(error)
+        self.ax.relim()
+        self.ax.autoscale_view()
+        #We need to draw *and* flush
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+    def save_plot(self,figname,dataname):
+        plt.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        dp.writerow(self.line.get_xdata())
+        dp.writerow(self.line.get_ydata())   
+        fp.close() 
+
+class PlotUpdate2():
     #Suppose we know the x range
     #min_x = 0
     #max_x = 300
@@ -239,6 +270,8 @@ class PlotUpdate():
         self.lines1=[]
         self.lines2=[]
         self.number=N
+        self.starttime= time.time()
+        self.xdata=[]
         for i in range(self.number):
             line, = self.ax1.plot([],[],label=str(i+1)) #error_x
             self.lines1.append(line)
@@ -260,11 +293,12 @@ class PlotUpdate():
     def on_running(self, error_x, error_y):
         #Update data (with the new _and_ the old points)
         for i in range(self.number):
-            xdata=np.arange(0,len(error_x))
-            self.lines1[i].set_xdata(xdata)
+            timec = time.time()
+            self.xdata.append(timec-self.starttime)
+            self.lines1[i].set_xdata(self.xdata)
             self.lines1[i].set_ydata(error_x)
-            ydata=np.arange(0,len(error_y))
-            self.lines2[i].set_xdata(ydata)
+            # ydata=np.arange(0,len(error_y))
+            self.lines2[i].set_xdata(self.xdata)
             self.lines2[i].set_ydata(error_y)
         #Need both of these in order to rescale
         self.ax1.relim()
@@ -274,6 +308,19 @@ class PlotUpdate():
         #We need to draw *and* flush
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
+    
+    def save_plot(self,figname,dataname):
+        plt.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        dp.writerow(self.lines1[self.number-1].get_xdata())
+        dp.writerow(self.lines1[self.number-1].get_ydata())
+        dp.writerow(self.lines2[self.number-1].get_xdata())
+        dp.writerow(self.lines2[self.number-1].get_ydata())
+        fp.close()
+
+
+
 
 def carotationR(x0):  
     theta=ca.atan2(x0[4]-x0[1],x0[3]-x0[0])
@@ -308,14 +355,17 @@ def distence_to_x(J1,pv,pt):
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
+        QRID=rospy.get_param('~QRID')
+        pointname=rospy.get_param('~feature')
         pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
-        transport_flag_pub=rospy.Publisher('transportflag',Bool,queue_size=10)
-        Targe_id=Targe_ID()
+        transport_flag_pub=rospy.Publisher('transportflag'+str(QRID),Bool,queue_size=10)
+        Targe_id=Targe_ID(QRID)
         Targe_zone=Targetzone()
         vel = [0]*2
         Robot = QRrobot()
         Obstacle=Obstacle_QR()
-        model_errorplot=PlotUpdate(1)
+        
+      
         JM=Jmatrix(P=N_target*2)
         # Frame=frame_image()
         T = 0.15# sampling time [s]
@@ -354,7 +404,7 @@ if __name__ == '__main__':
 
 
         Q = 1*np.eye(2*N_target)
-        R=0.001*np.eye(4)
+        R=0.00001*np.eye(4)
         Qr=1*np.eye(2)
         # Qr[1,1]=0
         
@@ -379,8 +429,7 @@ if __name__ == '__main__':
         # t_c = [t0] # for the time
         xx = []
         x_next=None
-        model_error_x=[]
-        model_error_y=[]
+        
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
         r_object=35
@@ -393,9 +442,15 @@ if __name__ == '__main__':
                 transport_flag_pub.publish(transport_flag)
             #state 10
             if Robot.flag==1 and Targe_zone.flag==1 and Targe_id.enclose_flag is True and transport_flag is False:
+                
                 # object pick hard constraint
                 if object_flag==0 and Targe_id.ID!=0:
-                    Target_circle=np.array([Targe_zone.target.x*0.6, Targe_zone.target.y*0.8,Targe_zone.target.z])
+                    distance_error=Plotupdate('distance error'+str(Targe_id.ID), 'distance error(m)')
+                    model_errorplot=PlotUpdate2(1)
+                    model_error_x=[]
+                    model_error_y=[]
+                    dist_error=[]
+                    Target_circle=np.array([Targe_zone.target.x*0.8, Targe_zone.target.y*0.9,Targe_zone.target.z])
                     xs=[]
                     for i in range(N_target):
                         xs.append(Target_circle[:2])
@@ -420,8 +475,8 @@ if __name__ == '__main__':
                         ubg.append(440* 1.5037594e-3)
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
-                        lbg.append(L*0.4)
-                        ubg.append(L*0.7)
+                        lbg.append(L*0.5)
+                        ubg.append(L*0.8)
                     for i in range(N):
                         [M,O]=carotationR(X[i,:])
                         # b=ca.mtimes(M,X[i,3:5].T)-ca.mtimes(M,O)
@@ -463,11 +518,13 @@ if __name__ == '__main__':
                     points=np.array(points).reshape(-1,1)
                     JM.initialJ(r1,r2,points)
                     object_flag=1
-                   
+                    
                 if object_flag==1 and Targe_id.ID!=0:
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
                     x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
                     IDi=int(Targe_id.ID-1)
+                    
+                    
                     x0.append(Robot.robotx[IDi])
                     x0.append(Robot.roboty[IDi])
                     x0=np.array(x0).reshape(-1,1)
@@ -475,7 +532,10 @@ if __name__ == '__main__':
                     if x_next is not None:
                         model_error_x.append(x_next[6][0]-x0[6][0])
                         model_error_y.append(x_next[7][0]-x0[7][0])
+                        dist_error.append(np.linalg.norm(Target_circle[:2]-x1[-2:]))
                         model_errorplot.on_running(model_error_x,model_error_y)
+                        distance_error.on_running(dist_error)
+
                     # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
                     # ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
                     
@@ -484,17 +544,19 @@ if __name__ == '__main__':
                     # x_center=x0[:2]+x0[3:5]
                     flag_Ko=np.zeros((3,1))
                     Ko=np.zeros((3,1))
+                    Kmid=0
+                    flag_Kmid=0
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
                     # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
-                    if  x_center[0]>Target_circle[0]/0.6*0.8 or x_center[1]>Target_circle[1]/0.8*0.8:
+                    if  x_center[0]>Targe_zone.target.x*0.94 or x_center[1]>Targe_zone.target.y*0.94 :
                     # if  x_center[0]<Target_circle[0]:
                         transport_flag=False
                         transport_flag_pub.publish(transport_flag)
                         # update the cost function                   
                         # kcos=2
-                        Sf=0.55
-                        Smin=0.15
+                        Sf=0.4
+                        Smin=0.2
                         a=3/(Sf-Smin)
                         b=-a*Smin
                         x1=np.concatenate(x0)
@@ -502,6 +564,7 @@ if __name__ == '__main__':
                         intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
                         intersectionP.append(Obstacle.calculateP(x1[3:5]).copy())
                         intersectionP.append(Obstacle.calculateP(x1[6:8]).copy())
+                        intersectionP.append(Obstacle.calculateP((x1[:2]+x1[3:5])/2).copy())
                         #the middle point of the tube
                         Dtanh_tube=[]
                         for f_tube in range(3):
@@ -515,7 +578,12 @@ if __name__ == '__main__':
                                 else:
                                     DX=2*np.transpose(x1[6:8]-xs)
                                     Ko[f_tube]=np.linalg.norm(DX)/np.linalg.norm(DCtanh)
-
+                        Ctheta=np.dot((intersectionP[3][0] - (x1[:2]+x1[3:5])/2), (intersectionP[3][1]- (x1[:2]+x1[3:5])/2)) / np.linalg.norm(intersectionP[3][0]- (x1[:2]+x1[3:5])/2) / np.linalg.norm(intersectionP[3][1]-(x1[:2]+x1[3:5])/2)
+                        if Ctheta<Sf and flag_Kmid==0:
+                            flag_Kmid=1
+                            DCtanh=get_derivative((x1[:2]+x1[3:5])/2,intersectionP[3],a,b)
+                            Dx=(distence_to_x(JM.J[:,:2],x1[6:8],xs)+distence_to_x(JM.J[:,2:4],x1[6:8],xs))/2
+                            flag_Kmid=0.2*np.linalg.norm(Dx)/np.linalg.norm(DCtanh)
                             # Ctanh=math.tanh(a*Ctheta+b)
                             # l1=np.linalg.norm(intersectionP[f_tube][0] - x1[3*f_tube:2+3*f_tube])
                             # l2=np.linalg.norm(intersectionP[f_tube][1]- x1[3*f_tube:2+3*f_tube])
@@ -540,6 +608,7 @@ if __name__ == '__main__':
                                 Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
                                 Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)-\
                                 Ko[2]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2][0].reshape(1,-1))- X[i,6:8], ca.DM(intersectionP[2][1].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[2][0].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[2][1].reshape(1,-1)) - X[i,6:8]))+b)
+                                # Kmid*ca.tanh(a*(ca.dot(ca.DM(intersectionP[3][0].reshape(1,-1))- (X[i,:2]+X[i,3:5])/2, ca.DM(intersectionP[3][1].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2)/ ca.norm_2(ca.DM(intersectionP[2][0].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2) / ca.norm_2(ca.DM(intersectionP[2][1].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2))+b)
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                         solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
@@ -565,13 +634,15 @@ if __name__ == '__main__':
                             pub.publish(vel_msg)
                             d = rospy.Duration(T)
                             rospy.sleep(d)
-                        # ran_vel=np.zeros((1,4))
-                        # vel_msg = Float64MultiArray(data=ran_vel[0])
-                        # rospy.loginfo(vel_msg)
-                        # pub.publish(vel_msg)
-                        # d = rospy.Duration(0.05)
+                        ran_vel=np.zeros((1,4))
+                        vel_msg = Float64MultiArray(data=ran_vel[0])
+                        rospy.loginfo(vel_msg)
+                        pub.publish(vel_msg)
+                        d = rospy.Duration(0.00001)
                         rospy.sleep(d)
                     else:
+                        model_errorplot.save_plot('modelerror'+str(Targe_id.ID)+'.png','Jerrordate'+str(Targe_id.ID)+'.csv')
+                        distance_error.save_plot('transport error'+str(Targe_id.ID)+'.png','transport'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

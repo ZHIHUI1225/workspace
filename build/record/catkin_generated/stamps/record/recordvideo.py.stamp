@@ -26,10 +26,10 @@ from numpy import linalg as LA
 import scipy.optimize as opt
 
 class Point_tube:
-    def __init__(self):
+    def __init__(self,name):
         self.feature_point=PointCloud()
         self.middlepoint=Point32()
-        self.sub = rospy.Subscriber('/feature_points', PoseArray, self.tube_callback,queue_size=10)
+        self.sub = rospy.Subscriber(name, PoseArray, self.tube_callback,queue_size=10)
     def tube_callback(self, msg): # tube msg
         self.feature_point=PointCloud()
         for pose in msg.poses:
@@ -101,10 +101,12 @@ if __name__ == '__main__':
         Frame=frame_image()
         Robot = QRrobot()
         F=FLAG()
-        feature=Point_tube()
-        TargetID_pub=rospy.Publisher('TargetID',Int8,queue_size=10)
-        mpc1_flag_pub=rospy.Publisher('goflag',Bool,queue_size=10)
-        Targetzone_pub=rospy.Publisher('Targetzone',Point32,queue_size=10)
+        pointname=rospy.get_param('~feature')
+        QRID=rospy.get_param('~QRID')
+        feature=Point_tube(pointname)
+        TargetID_pub=rospy.Publisher('TargetID'+str(QRID),Int8,queue_size=10)
+        mpc1_flag_pub=rospy.Publisher('goflag'+str(QRID),Bool,queue_size=10)
+        Targetzone_pub=rospy.Publisher('Targetzone'+str(QRID),Point32,queue_size=10)
         rate = rospy.Rate(30.0)
         go_flag=Bool() # run mpc_multipoints_hard_constraints
         flag=0
@@ -117,16 +119,17 @@ if __name__ == '__main__':
             point.z = 40*1.5037594e-3
             Targetzone_pub.publish(point)
             if Frame.image is not None and flag==0 and Robot.flag==1:
+                h,w,c=Frame.image.shape #width height channel
                 wri = cv2.VideoWriter('record.avi', cv2.VideoWriter_fourcc(*'XVID'), 120, (1229-63,520-44), True)
                 P=(int(point.x/1.5037594e-3),int(point.y /1.5306122e-3))
                 # cv2.rectangle(Frame.image,(0,0),P,(255, 0, 0),3)
-                cv2.rectangle(Frame.image,(P[0],0),(1229-63,520-44),(255, 0, 0),3)
+                # cv2.rectangle(Frame.image,(P[0],0),(1229-63,520-44),(255, 0, 0),3)
                 # cv2.circle(Frame.image, P,int((point.z+30)/1.5037594e-3), (255, 255, 255), 3,8,0)
                 distence=1000
                 Target_ID=Int8()
                 Target_ID.data=0
                 for i in range(len(Robot.robotID)):
-                    if Robot.robotID[i]>2 and Robot.robotID[i]<10:
+                    if Robot.robotID[i]>4 and Robot.robotID[i]<10:
                         ID=Robot.robotID[i]
                         d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
                         # d=(Robot.robotx[ID-1]- point.x)**2
@@ -143,27 +146,34 @@ if __name__ == '__main__':
                 if F.transport_flag is True and F.enclose_flag is True:
                     distence=1000
                     for i in range(len(Robot.robotID)):
-                        if Robot.robotID[i]>2 and Robot.robotID[i]<10:
+                        if Robot.robotID[i]>4 and Robot.robotID[i]<10: 
                             ID=Robot.robotID[i]
                             d=(Robot.robotx[ID-1]- point.x)**2+(Robot.roboty[ID-1]-point.y)**2
                             # d=(Robot.robotx[ID-1]- point.x)**2
                             if d<distence and (Robot.robotx[ID-1]>point.x or Robot.roboty[ID-1]>point.y):
                                 distence=d
                                 Target_ID.data=int(ID)
-                    TargetID_pub.publish(Target_ID.data)
-                    go_flag.data=True
-                    mpc1_flag_pub.publish(go_flag.data)
+                                TargetID_pub.publish(Target_ID.data)
+                                go_flag.data=True
+                                mpc1_flag_pub.publish(go_flag.data)
                 else:
                     TargetID_pub.publish(Target_ID.data)
                     go_flag.data=False
                     mpc1_flag_pub.publish(go_flag.data)
-
-                P=(int(point.x/1.5037594e-3),int(point.y /1.5306122e-3))
-                cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
+                if QRID==1:
+                    P=(int(point.x/1.5037594e-3+5),int(point.y /1.5306122e-3+5))
+                    cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
+                else:
+                    P=(int(w-point.x/1.5037594e-3+5),int(h-point.y /1.5306122e-3+5))
+                    cv2.rectangle(Frame.image,(P[0],P[1]),(w,h),(255, 0, 0),3)
                 if feature.middlepoint.x!=0 and F.enclose_flag is False:
                     for xk in range(len(feature.feature_point.points)):
                         center=(int(feature.feature_point.points[xk].x),int(feature.feature_point.points[xk].y))
                         cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
+                # if feature34.middlepoint.x!=0 and F.enclose_flag is False:
+                #     for xk in range(len(feature34.feature_point.points)):
+                #         center34=(int(feature34.feature_point.points[xk].x),int(feature34.feature_point.points[xk].y))
+                #         cv2.circle(Frame.image, center34, 2, (0, 0, 255), -1)
                     # center=(int(feature.feature_point.points[1].x),int(feature.feature_point.points[1].y))
                     # cv2.circle(Frame.image, center, R, (0, 255, 255), 1)
                 # center=(int(Robot.robotx[0]/1.5037594e-3),int(Robot.roboty[0]/1.5306122e-3 ))
