@@ -30,7 +30,8 @@
 
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/>  -->
 
-	<node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope1" output="screen" clear_params="true"> -->
+	<node pkg="mpc" type="mpc_softconstraints.py" name="mpc_envelope1" output="screen" clear_params="true">
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
@@ -39,6 +40,17 @@
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
+
+	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope2" output="screen" clear_params="true">
+	<param name="feature" value="$(arg feature2)"/>
+	<param name="QRID" value="$(arg QRID2)"/>
+	</node> 
+
+	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_transport2" output="screen" clear_params="true"> 
+	<param name="feature" value="$(arg feature2)"/>
+	<param name="QRID" value="$(arg QRID2)"/>
+	</node>  -->
+
 	<!-- <node pkg="mpc" type="mpc_angle_avoidance.py" name="mpc_angle_avoidance" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_softconstraints.py" name="mpc_softconstraints" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_weights.py" name="mpc_weights" output="screen"/>  -->

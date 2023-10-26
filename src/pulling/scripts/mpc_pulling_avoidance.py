@@ -204,7 +204,7 @@ class Jmatrix():
             self.ydata=np.vstack((self.ydata[len(delta_t.T):,:],delta_t.T))
 
 class Targetzone():
-    def __init__(self):
+    def __init__(self,QRID):
         self.target=Point32()
         self.flag=0
         rospy.Subscriber('Targetzone'+str(QRID),Point32,self.Callback,queue_size=10)
@@ -231,14 +231,19 @@ class Plotupdate():
     def __init__(self,name,yname):
         #Set up plot
         self.figure, self.ax = plt.subplots()
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
         self.line,=self.ax.plot([],[])
         self.starttime= time.time()
         self.xdata=[]
         self.ax.set_autoscaley_on(True)
         self.ax.grid()
-        self.ax.set_xlabel('time(s)')
-        self.ax.set_ylabel(yname)
-        self.figure.suptitle(name)
+        self.ax.set_xlabel('time(s)',fontsize=8)
+        self.ax.set_ylabel(yname,fontsize=8)
+        self.figure.suptitle(name,fontsize=8)
+        self.ax.legend(loc='upper left')
+        self.ax.tick_params(axis='x', labelsize=8)
+        self.ax.tick_params(axis='y', labelsize=8)
         self.ax.legend(loc='upper left')
     def on_running(self, error):
         timec = time.time()
@@ -251,7 +256,7 @@ class Plotupdate():
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
     def save_plot(self,figname,dataname):
-        plt.savefig(figname)
+        self.figure.savefig(figname)
         fp = open(dataname, mode='a+', newline='')
         dp = csv.writer(fp)
         dp.writerow(self.line.get_xdata())
@@ -267,6 +272,8 @@ class PlotUpdate2():
         #Set up plot
         #self.figure, self.ax = plt.subplots()
         self.figure, (self.ax1, self.ax2) = plt.subplots(1, 2, sharey=True)
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
         self.lines1=[]
         self.lines2=[]
         self.number=N
@@ -357,10 +364,10 @@ if __name__ == '__main__':
         rospy.init_node('mpc_mode')
         QRID=rospy.get_param('~QRID')
         pointname=rospy.get_param('~feature')
-        pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
+        pub = rospy.Publisher('anglevelocity'+str(QRID), Float64MultiArray, queue_size=10)
         transport_flag_pub=rospy.Publisher('transportflag'+str(QRID),Bool,queue_size=10)
         Targe_id=Targe_ID(QRID)
-        Targe_zone=Targetzone()
+        Targe_zone=Targetzone(QRID)
         vel = [0]*2
         Robot = QRrobot()
         Obstacle=Obstacle_QR()
@@ -371,7 +378,7 @@ if __name__ == '__main__':
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
         un= 5 # control step
-        v_max = 0.015
+        v_max = 0.025
         omega_max = 0.5
         rate = rospy.Rate(30)
         x = ca.SX.sym('x')
@@ -442,15 +449,14 @@ if __name__ == '__main__':
                 transport_flag_pub.publish(transport_flag)
             #state 10
             if Robot.flag==1 and Targe_zone.flag==1 and Targe_id.enclose_flag is True and transport_flag is False:
-                
                 # object pick hard constraint
                 if object_flag==0 and Targe_id.ID!=0:
-                    distance_error=Plotupdate('distance error'+str(Targe_id.ID), 'distance error(m)')
+                    distance_error=Plotupdate('distance error', 'distance error(m)')
                     model_errorplot=PlotUpdate2(1)
                     model_error_x=[]
                     model_error_y=[]
                     dist_error=[]
-                    Target_circle=np.array([Targe_zone.target.x*0.8, Targe_zone.target.y*0.9,Targe_zone.target.z])
+                    Target_circle=np.array([Targe_zone.target.x, Targe_zone.target.y,Targe_zone.target.z])
                     xs=[]
                     for i in range(N_target):
                         xs.append(Target_circle[:2])
@@ -520,11 +526,13 @@ if __name__ == '__main__':
                     object_flag=1
                     
                 if object_flag==1 and Targe_id.ID!=0:
+                    if QRID==1:
+                        RID=0
+                    else:
+                        RID=2
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                    x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
+                    x0= [Robot.robotx[RID+0], Robot.roboty[RID+0],Robot.robotyaw[RID+0],Robot.robotx[RID+1], Robot.roboty[RID+1],Robot.robotyaw[RID+1]]
                     IDi=int(Targe_id.ID-1)
-                    
-                    
                     x0.append(Robot.robotx[IDi])
                     x0.append(Robot.roboty[IDi])
                     x0=np.array(x0).reshape(-1,1)
@@ -549,7 +557,7 @@ if __name__ == '__main__':
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
                     # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
-                    if  x_center[0]>Targe_zone.target.x*0.94 or x_center[1]>Targe_zone.target.y*0.94 :
+                    if  np.linalg.norm(x_center[0]-Targe_zone.target.x)> 40* 1.5037594e-3 or np.linalg.norm(x_center[1]-Targe_zone.target.y)> 30* 1.5037594e-3:
                     # if  x_center[0]<Target_circle[0]:
                         transport_flag=False
                         transport_flag_pub.publish(transport_flag)
@@ -641,8 +649,9 @@ if __name__ == '__main__':
                         d = rospy.Duration(0.00001)
                         rospy.sleep(d)
                     else:
-                        model_errorplot.save_plot('modelerror'+str(Targe_id.ID)+'.png','Jerrordate'+str(Targe_id.ID)+'.csv')
-                        distance_error.save_plot('transport error'+str(Targe_id.ID)+'.png','transport'+str(Targe_id.ID)+'.csv')
+                        if QRID==1:
+                            model_errorplot.save_plot('modelerror'+str(Targe_id.ID)+'.png','Jerrordate'+str(Targe_id.ID)+'.csv')
+                            distance_error.save_plot('transport error'+str(Targe_id.ID)+'.png','transport'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

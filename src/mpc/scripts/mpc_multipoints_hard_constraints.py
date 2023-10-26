@@ -188,15 +188,19 @@ class Plotupdate():
     def __init__(self,name,yname):
         #Set up plot
         self.figure, self.ax = plt.subplots()
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
         self.line,=self.ax.plot([],[])
         self.starttime= time.time()
         self.xdata=[]
         self.ax.set_autoscaley_on(True)
         self.ax.grid()
-        self.ax.set_xlabel('time(s)')
-        self.ax.set_ylabel(yname)
-        self.figure.suptitle(name)
+        self.ax.set_xlabel('time(s)',fontsize=8)
+        self.ax.set_ylabel(yname,fontsize=8)
+        self.figure.suptitle(name,fontsize=8)
         self.ax.legend(loc='upper left')
+        self.ax.tick_params(axis='x', labelsize=8)
+        self.ax.tick_params(axis='y', labelsize=8)
     def on_running(self, error):
         timec = time.time()
         self.xdata.append(timec-self.starttime)
@@ -208,7 +212,7 @@ class Plotupdate():
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
     def save_plot(self,figname,dataname):
-        plt.savefig(figname)
+        self.figure.savefig(figname)
         fp = open(dataname, mode='a+', newline='')
         dp = csv.writer(fp)
         dp.writerow(self.line.get_xdata())
@@ -220,7 +224,7 @@ if __name__ == '__main__':
         rospy.init_node('mpc_mode')
         QRID=rospy.get_param('~QRID')
         pointname=rospy.get_param('~feature')
-        pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
+        pub = rospy.Publisher('anglevelocity'+str(QRID), Float64MultiArray, queue_size=10)
         enclose_flag_pub=rospy.Publisher('encloseflag'+str(QRID),Bool,queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
@@ -331,8 +335,8 @@ if __name__ == '__main__':
                     # deltay=(7+(32-Robot.roboty[5]/1.5306122e-3/29.71))*1.5306122e-3
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
-                    Disterror=Plotupdate('Distance'+str(Targe_id.ID),'distance error (m)')
-                    Thetaerror=Plotupdate('Theta'+str(Targe_id.ID),'thera error (rad)')
+                    Disterror=Plotupdate('Distance','distance error (m)')
+                    Thetaerror=Plotupdate('Theta','thera error (rad)')
                     error_x=[]
                     error_y=[]
                     error_d=[]
@@ -343,7 +347,7 @@ if __name__ == '__main__':
                     xs=np.array(xs).reshape(-1,1)
                     object_flag=1
                     Kt=10000
-                    ktheta=1
+                    ktheta=2
                     ddp=1.5
                      #### cost function
                     obj = 0 #### cost
@@ -384,7 +388,7 @@ if __name__ == '__main__':
                     ddp=1.2
                     for i in range(N+1):
                         g.append(ca.norm_2(X[i,:2]-X[i,3:5]))
-                        lbg.append(L*0.5)
+                        lbg.append(L*0.55)
                         ubg.append(L*0.9)
                     nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                     opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
@@ -394,11 +398,14 @@ if __name__ == '__main__':
                 if object_flag==1:
                    
                 # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],feature.middlepoint.x,feature.middlepoint.y]).reshape(-1, 1)# initial state
-                
-                    if len(feature.feature_point.points)!=3:
-                        x0[:6]=np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]).reshape(-1,1)
+                    if QRID==1:
+                        RID=0
                     else:
-                        x0= [Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1]]
+                        RID=2
+                    if len(feature.feature_point.points)!=3:
+                        x0[:6]=np.array([Robot.robotx[RID+0], Robot.roboty[RID+0],Robot.robotyaw[RID+0],Robot.robotx[RID+1], Robot.roboty[RID+1],Robot.robotyaw[RID+1]]).reshape(-1,1)
+                    else:
+                        x0= [Robot.robotx[RID+0], Robot.roboty[RID+0],Robot.robotyaw[RID+0],Robot.robotx[RID+1], Robot.roboty[RID+1],Robot.robotyaw[RID+1]]
                         for xk in range(N_target):
                             x0.append(feature.feature_point.points[xk].x)
                             x0.append(feature.feature_point.points[xk].y)
@@ -459,8 +466,9 @@ if __name__ == '__main__':
                         d = rospy.Duration(0.00001)
                         rospy.sleep(d)
                     else:
-                        Disterror.save_plot('distanceerror'+str(Targe_id.ID)+'.png','distance'+str(Targe_id.ID)+'.csv')
-                        Thetaerror.save_plot('thetaerror'+str(Targe_id.ID)+'.png','theta'+str(Targe_id.ID)+'.csv')
+                        if QRID==1:
+                            Disterror.save_plot('distanceerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','distance'+str(Targe_id.ID)+'.csv')
+                            Thetaerror.save_plot('thetaerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','theta'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

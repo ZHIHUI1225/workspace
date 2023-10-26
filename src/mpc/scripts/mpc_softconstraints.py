@@ -259,15 +259,21 @@ class Plotupdate():
     def __init__(self,name,yname):
         #Set up plot
         self.figure, self.ax = plt.subplots()
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
         self.line,=self.ax.plot([],[])
         self.starttime= time.time()
         self.xdata=[]
         self.ax.set_autoscaley_on(True)
         self.ax.grid()
-        self.ax.set_xlabel('time(s)')
-        self.ax.set_ylabel(yname)
         self.figure.suptitle(name)
         self.ax.legend(loc='upper left')
+        self.ax.set_xlabel('time(s)',fontsize=8)
+        self.ax.set_ylabel(yname,fontsize=8)
+        self.figure.suptitle(name,fontsize=8)
+        self.ax.legend(loc='upper left')
+        self.ax.tick_params(axis='x', labelsize=8)
+        self.ax.tick_params(axis='y', labelsize=8)
     def on_running(self, error):
         timec = time.time()
         self.xdata.append(timec-self.starttime)
@@ -429,7 +435,7 @@ if __name__ == '__main__':
         rospy.init_node('mpc_mode')
         QRID=rospy.get_param('~QRID')
         pointname=rospy.get_param('~feature')
-        pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
+        pub = rospy.Publisher('anglevelocity'+str(QRID), Float64MultiArray, queue_size=10)
         enclose_flag_pub=rospy.Publisher('encloseflag'+str(QRID),Bool,queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
@@ -548,8 +554,8 @@ if __name__ == '__main__':
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
                     #plot 
-                    Disterror=Plotupdate('Distance'+str(Targe_id.ID),'distance error (m)')
-                    Thetaerror=Plotupdate('Theta'+str(Targe_id.ID),'thera error (rad)')
+                    Disterror=Plotupdate('Distance'+str(QRID)+'Target'+str(Targe_id.ID),'distance error (m)')
+                    Thetaerror=Plotupdate('Theta'+str(QRID)+'Target'+str(Targe_id.ID),'thera error (rad)')
                     # flag of obstacle coefficient
                     flag_obstacle=np.zeros((N_target+2,1))
                     Ko=np.zeros((2,1))
@@ -625,8 +631,8 @@ if __name__ == '__main__':
                        
                         # update the cost function                   
                         # kcos=2
-                        Sf=0.5
-                        Smin=0.2
+                        Sf=0.4
+                        Smin=0.1
                         a=3/(Sf-Smin)
                         b=-a*Smin
                         # x1=np.concatenate(x0)
@@ -679,7 +685,8 @@ if __name__ == '__main__':
                                 Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)+\
                                 Kt*ca.if_else(ca.norm_2(X[i,3:5].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,3:5].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)
                             for f_tube in range(N_target):
-                                obj=obj-Ko_tube[f_tube]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]))+b)
+                                if f_tube==1:
+                                    obj=obj-Ko_tube[f_tube]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]))+b)
                                 obj=obj+Kt*ca.if_else(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
                     
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
@@ -716,8 +723,8 @@ if __name__ == '__main__':
                     else:
                         # save data
                         # Errorplot.save_plot('error.png','error.csv')
-                        Disterror.save_plot('distanceerror'+str(Targe_id.ID)+'.png','distance'+str(Targe_id.ID)+'.csv')
-                        Thetaerror.save_plot('thetaerror'+str(Targe_id.ID)+'.png','theta'+str(Targe_id.ID)+'.csv')
+                        Disterror.save_plot('distanceerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','distance'+str(Targe_id.ID)+'.csv')
+                        Thetaerror.save_plot('thetaerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','theta'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

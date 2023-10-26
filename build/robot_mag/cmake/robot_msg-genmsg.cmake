@@ -24,7 +24,7 @@ add_custom_target(_robot_msg_generate_messages_check_deps_${_filename}
 
 get_filename_component(_filename "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg" NAME_WE)
 add_custom_target(_robot_msg_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "robot_msg" "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg" "geometry_msgs/Point:robot_msg/robot_pose:std_msgs/Int8"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "robot_msg" "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg" "robot_msg/robot_pose:geometry_msgs/Point:std_msgs/Int8"
 )
 
 get_filename_component(_filename "/home/romi/workspace/src/robot_mag/msg/target_pose.msg" NAME_WE)
@@ -52,7 +52,7 @@ _generate_msg_cpp(robot_msg
 _generate_msg_cpp(robot_msg
   "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
+  "/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/robot_msg
 )
 _generate_msg_cpp(robot_msg
@@ -109,7 +109,7 @@ _generate_msg_eus(robot_msg
 _generate_msg_eus(robot_msg
   "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
+  "/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/robot_msg
 )
 _generate_msg_eus(robot_msg
@@ -166,7 +166,7 @@ _generate_msg_lisp(robot_msg
 _generate_msg_lisp(robot_msg
   "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
+  "/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/robot_msg
 )
 _generate_msg_lisp(robot_msg
@@ -223,7 +223,7 @@ _generate_msg_nodejs(robot_msg
 _generate_msg_nodejs(robot_msg
   "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
+  "/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/robot_msg
 )
 _generate_msg_nodejs(robot_msg
@@ -280,7 +280,7 @@ _generate_msg_py(robot_msg
 _generate_msg_py(robot_msg
   "/home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
+  "/home/romi/workspace/src/robot_mag/msg/robot_pose.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Int8.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/robot_msg
 )
 _generate_msg_py(robot_msg

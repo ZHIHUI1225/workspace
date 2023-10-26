@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/romi/workspace/build
 include robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_robot_pose_array.dir/progress.make
 
 robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_robot_pose_array:
-	cd /home/romi/workspace/build/robot_mag && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py robot_msg /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg geometry_msgs/Point:robot_msg/robot_pose:std_msgs/Int8
+	cd /home/romi/workspace/build/robot_mag && ../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py robot_msg /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg robot_msg/robot_pose:geometry_msgs/Point:std_msgs/Int8
 
 _robot_msg_generate_messages_check_deps_robot_pose_array: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_robot_pose_array
 _robot_msg_generate_messages_check_deps_robot_pose_array: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_robot_pose_array.dir/build.make

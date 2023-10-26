@@ -69,8 +69,8 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_cpp: /home/romi/workspace/devel
 
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/lib/gencpp/gen_cpp.py
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /home/romi/workspace/src/robot_mag/msg/robot_pose_array.msg
-/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /home/romi/workspace/src/robot_mag/msg/robot_pose.msg
+/home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/geometry_msgs/msg/Point.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/std_msgs/msg/Int8.msg
 /home/romi/workspace/devel/include/robot_msg/robot_pose_array.h: /opt/ros/noetic/share/gencpp/msg.h.template
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Generating C++ code from robot_msg/robot_pose_array.msg"
