@@ -31,16 +31,25 @@
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_multipoints_hard_constraints" output="screen"/>  -->
 
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope1" output="screen" clear_params="true"> -->
-	<node pkg="mpc" type="mpc_softconstraints.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<!-- <node pkg="mpc" type="mpc_softconstraints.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node>  -->
+
+	<node pkg="mpc" type="mpc_piecewise.py" name="mpc_envelope1" output="screen" clear_params="true">
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
 
-	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_transport1" output="screen" clear_params="true"> 
+	<node pkg="pulling" type="mpc_pulling_cos.py" name="mpc_transport1" output="screen" clear_params="true"> 
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
 
+	<node pkg="obstacle_detect" type="Obstacle_new.py" name="Obstacle" output="screen" clear_params="true"> 
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node> 
 	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope2" output="screen" clear_params="true">
 	<param name="feature" value="$(arg feature2)"/>
 	<param name="QRID" value="$(arg QRID2)"/>

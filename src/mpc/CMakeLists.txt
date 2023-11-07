@@ -174,6 +174,7 @@ catkin_install_python(PROGRAMS
   scripts/mpc_multipoints_hard_constraints.py
   scripts/mpc_filter.py
   scripts/mpc_EGO.py
+  scripts/mpc_piecewise.py
   scripts/mpc_softconstraints.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # use the Aruco code  detect the tube feature points
-# calculate the derivative to design the weight 
+# use cos piexewise function to avoid obstacles
 from std_msgs.msg import Int8
 from std_msgs.msg import Bool
 import rospy
@@ -63,62 +63,63 @@ class Point_tube:
             self.middlepoint.y=self.feature_point.points[int((len(msg.poses))/2)].y* 1.5306122e-3 
         # rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.poses)
 
-class Obstacle_QR:
-    def __init__(self):
-        self.points=np.zeros((4,2))
-        self.flag=0
-        self.senseP=np.zeros((2,2))
-        self.flag_in=True
-        self.vector=[]
-        self.sub = rospy.Subscriber('/obstacle', robot_pose_array, self.pose_callback,queue_size=10)
-    def pose_callback(self, msg): # feedback means actual value.
-        for i in range(len(msg.robot_pose_array)):
-            ID=msg.robot_pose_array[i].ID.data
-            self.points[int(ID-2),0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
-            self.points[int(ID-2),1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
-        self.flag=1
-        self.vector=[]
-        self.vector.append(self.points[1]-self.points[0])
-        self.vector.append(self.points[2]-self.points[3])
-        self.vector.append(self.points[3]-self.points[0])
-        self.vector.append(self.points[2]-self.points[1])
-    def calculateP(self,P):
-        P=P.reshape(1,-1)
-        # weather between vector 0 and 1
-        if np.cross(self.vector[0],P-self.points[0])*np.cross(self.vector[1],P-self.points[3])<=0:
-            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
-                self.flag_in=True
-            elif np.cross(self.vector[2],P-self.points[0])>0:
-                self.flag_in=False
-                self.senseP[0,:]=self.points[0]
-                self.senseP[1,:]=self.points[3]
-            else:
-                self.flag_in=False
-                self.senseP[0,:]=self.points[1]
-                self.senseP[1,:]=self.points[2]
-        elif np.cross(self.vector[0],P-self.points[0])<0:
-            self.flag_in=False
-            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
-                self.senseP[0,:]=self.points[0]
-                self.senseP[1,:]=self.points[1]
-            elif np.cross(self.vector[2],P-self.points[0])>0:
-                self.senseP[0,:]=self.points[3]
-                self.senseP[1,:]=self.points[1]
-            else:
-                self.senseP[0,:]=self.points[2]
-                self.senseP[1,:]=self.points[0]
-        else:
-            self.flag_in=False
-            if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
-                self.senseP[0,:]=self.points[3]
-                self.senseP[1,:]=self.points[2]
-            elif np.cross(self.vector[2],P-self.points[0])>0:
-                self.senseP[0,:]=self.points[0]
-                self.senseP[1,:]=self.points[2]
-            else:
-                self.senseP[0,:]=self.points[3]
-                self.senseP[1,:]=self.points[1]
-        return self.senseP
+# class Obstacle_QR:
+#     def __init__(self):
+#         self.points=np.zeros((4,2))
+#         self.flag=0
+#         self.senseP=np.zeros((2,2))
+#         self.flag_in=True
+#         self.vector=[]
+#         self.sub = rospy.Subscriber('/obstacle', robot_pose_array, self.pose_callback,queue_size=10)
+#     def pose_callback(self, msg): # feedback means actual value.
+#         for i in range(len(msg.robot_pose_array)):
+#             ID=msg.robot_pose_array[i].ID.data
+#             self.points[int(ID-2),0]=msg.robot_pose_array[i].position.x * 1.5037594e-3
+#             self.points[int(ID-2),1]=msg.robot_pose_array[i].position.y * 1.5306122e-3 
+#         self.flag=1
+#         self.vector=[]
+#         self.vector.append(self.points[1]-self.points[0])
+#         self.vector.append(self.points[2]-self.points[3])
+#         self.vector.append(self.points[3]-self.points[0])
+#         self.vector.append(self.points[2]-self.points[1])
+#     def calculateP(self,P):
+#         P=P.reshape(1,-1)
+#         # weather between vector 0 and 1
+#         if np.cross(self.vector[0],P-self.points[0])*np.cross(self.vector[1],P-self.points[3])<=0:
+#             if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+#                 self.flag_in=True
+#             elif np.cross(self.vector[2],P-self.points[0])>0:
+#                 self.flag_in=False
+#                 self.senseP[0,:]=self.points[0]
+#                 self.senseP[1,:]=self.points[3]
+#             else:
+#                 self.flag_in=False
+#                 self.senseP[0,:]=self.points[1]
+#                 self.senseP[1,:]=self.points[2]
+#         elif np.cross(self.vector[0],P-self.points[0])<0:
+#             self.flag_in=False
+#             if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+#                 self.senseP[0,:]=self.points[0]
+#                 self.senseP[1,:]=self.points[1]
+#             elif np.cross(self.vector[2],P-self.points[0])>0:
+#                 self.senseP[0,:]=self.points[3]
+#                 self.senseP[1,:]=self.points[1]
+#             else:
+#                 self.senseP[0,:]=self.points[2]
+#                 self.senseP[1,:]=self.points[0]
+#         else:
+#             self.flag_in=False
+#             if np.cross(self.vector[2],P-self.points[0])*np.cross(self.vector[3],P-self.points[1])<=0:
+#                 self.senseP[0,:]=self.points[3]
+#                 self.senseP[1,:]=self.points[2]
+#             elif np.cross(self.vector[2],P-self.points[0])>0:
+#                 self.senseP[0,:]=self.points[0]
+#                 self.senseP[1,:]=self.points[2]
+#             else:
+#                 self.senseP[0,:]=self.points[3]
+#                 self.senseP[1,:]=self.points[1]
+#         return self.senseP
+
 def get_derivative(x,P,a,b):
     # update the cost function                   
     x1=np.concatenate(x)
@@ -131,24 +132,29 @@ def get_derivative(x,P,a,b):
     DCtheta_vector=(1/l2-Ctanh/l1)*z1+(1/l1-Ctanh/l2)*z2
     DCtanh=a*(1-np.square(math.tanh(2.5)))*DCtheta_vector
     return DCtanh
-class K_Force:
-    def __init__(self):
-        self.Ko_tube=np.zeros((N_target,1))
-        self.Ko=np.zeros((2,1))
-        self.sub=rospy.Subscriber('/ForceK1',Float32MultiArray,self.sub_callback,queue_size=10)
-    def sub_callback(self,msg):
-        self.Ko=msg.data[:2]
-        self.Ko_tube=msg.data[2:]
+# class K_Force:
+#     def __init__(self):
+#         self.Ko_tube=np.zeros((N_target,1))
+#         self.Ko=np.zeros((2,1))
+#         self.sub=rospy.Subscriber('/ForceK1',Float32MultiArray,self.sub_callback,queue_size=10)
+#     def sub_callback(self,msg):
+#         self.Ko=msg.data[:2]
+#         self.Ko_tube=msg.data[2:]
 
 class intersectionPoints:
     def __init__(self):
         self.P=[]
+        self.flag_side=[]
         self.sub=rospy.Subscriber('/InterP1',Float32MultiArray,self.sub_callback,queue_size=10)
+        self.subflag=rospy.Subscriber('/Flag_side1',Float32MultiArray,self.flag_sub_callback,queue_size=10)
 
     def sub_callback(self,msg):
         self.P=[]
         for i in range(N_target+2):
            self.P.append(np.array(msg.data[4*i:4*(i+1)]).reshape(2,2))
+    
+    def flag_sub_callback(self,msg):
+        self.flag_side=msg.data
 
 class QRrobot:
     def __init__(self):
@@ -453,6 +459,7 @@ def getdcos_to_x(X1,X2,qm,pt,J1,J2):
     M2=np.matmul(I- np.matmul(z2,np.transpose(z2))/l2,(I/2))
     D=np.matmul(np.transpose(z1),M2)
     return D
+
 def getdcos_to_qm(X1,X2,qm,pt,J1,J2):
     l1=np.linalg.norm(pt-qm)
     l2=np.linalg.norm((X1+X2)/2-qm)
@@ -476,7 +483,6 @@ if __name__ == '__main__':
         pointname=rospy.get_param('~feature')
         pub = rospy.Publisher('anglevelocity'+str(QRID), Float64MultiArray, queue_size=10)
         enclose_flag_pub=rospy.Publisher('encloseflag'+str(QRID),Bool,queue_size=10)
-        K=K_Force()
         vel = [0]*2
         Robot = QRrobot()
         feature=Point_tube(pointname)
@@ -484,7 +490,7 @@ if __name__ == '__main__':
         iP=intersectionPoints()
         # Errorplot=PlotUpdate2(1)
        
-        Obstacle=Obstacle_QR()
+        # Obstacle=Obstacle_QR()
         # Frame=frame_image()
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
@@ -575,18 +581,18 @@ if __name__ == '__main__':
         error_y=[]
         error_d=[]
         error_theta=[]
-        force1_x=[]
-        force1_cos=[]
-        force1_ao=[]
-        force2_x=[]
-        force2_cos=[]
-        force2_ao=[]
-        force_x_tube=[]
-        force_cos_tube=[]
-        force_ao_tube=[]
+        # force1_x=[]
+        # force1_cos=[]
+        # force1_ao=[]
+        # force2_x=[]
+        # force2_cos=[]
+        # force2_ao=[]
+        # force_x_tube=[]
+        # force_cos_tube=[]
+        # force_ao_tube=[]
         u0 = np.array([0,0,0,0]*N).reshape(-1, 4)# np.ones((N, 2)) # controls
         object_flag=0
-        r_object=32
+        r_object=35
         enclose_flag=False
         enclose_flag_pub.publish(enclose_flag)
         while not rospy.is_shutdown():
@@ -595,7 +601,7 @@ if __name__ == '__main__':
                 enclose_flag=False
                 enclose_flag_pub.publish(enclose_flag)
             ## state 00 begin
-            if Robot.flag==1 and feature.middlepoint.x!=0 and Targe_id.transport_flag is False and enclose_flag is False and Obstacle.flag==1 and iP.P is not None:
+            if Robot.flag==1 and feature.middlepoint.x!=0 and Targe_id.transport_flag is False and enclose_flag is False and iP.P is not None:
                 # object pick hard constraint
                 
                 if object_flag==0 and Targe_id.ID!=0 :
@@ -669,7 +675,7 @@ if __name__ == '__main__':
                     cos_theta=np.dot(-x0[8:10]+Target_circle[:2],(x0[:2]+x0[3:5])/2-x0[8:10])/np.linalg.norm(-x0[8:10]+Target_circle[:2])/np.linalg.norm((x0[:2]+x0[3:5])/2-x0[8:10])
                     # update enviroment information
                     # R=70*1.5306122e-3
-                    ktheta=0.03
+                    ktheta=0.1
                     error_x.append( Target_circle[0]-x_center[0][0])
                     error_y.append( Target_circle[1]-x_center[0][1])
                     error_d.append(np.linalg.norm(Target_circle[:2]-x_center[0]))
@@ -683,85 +689,49 @@ if __name__ == '__main__':
                     if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5 and len(iP.P)==5:
                         enclose_flag=False
                         enclose_flag_pub.publish(enclose_flag)
-                       
-                        # update the cost function                   
-                        # kcos=2
-                        Sf=0.4
-                        Smin=0.2
-                        a=2.5/(Sf-Smin)
-                        b=-a*Smin
-                        # # x1=np.concatenate(x0)
-                        # intersectionP=[]
-                        # intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
-                        # intersectionP.append(Obstacle.calculateP(x1[3:5]).copy())
-                        # intersectionP.append(Obstacle.calculateP(x1[6:8]).copy())
-                        # intersectionP.append(Obstacle.calculateP(x1[8:10]).copy())
-                        # intersectionP.append(Obstacle.calculateP(x1[10:12]).copy())
-                        # #the middle point of the tube
-                        # Dtanh_tube=[]
-                        # Dx=distence_to_x((x0[:2]+x0[3:5]+x0[8:10]+x0[6:8]+x0[10:12])/(2+N_target),xs,Qr)
-                        # Dcos=getdcos_to_qm(x0[:2],x0[3:5],x0[8:10],xs,J[2:4,:2],J[2:4,-2:])
-                        # DCtanh=0
-                        # for f_tube in range(N_target):
-                        #     Ctheta=np.dot((intersectionP[2+f_tube][0] - x1[6+2*f_tube:8+2*f_tube]), (intersectionP[2+f_tube][1]- x1[6+2*f_tube:8+2*f_tube])) / np.linalg.norm(intersectionP[2+f_tube][0]- x1[6+2*f_tube:8+2*f_tube]) / np.linalg.norm(intersectionP[2+f_tube][1]-x1[6+2*f_tube:8+2*f_tube])
-                        #     if Ctheta<Sf and flag_obstacle[2+f_tube]==0:
-                        #         DCtanh=get_derivative(x0[6+2*f_tube:8+2*f_tube],intersectionP[2+f_tube],a,b)
-                        #         DC=min([np.linalg.norm(np.dot(DCtanh,J[2*f_tube:2+2*f_tube,:2])),np.linalg.norm(np.dot(DCtanh,J[2*f_tube:2+2*f_tube,-2:]))])
-                        #         # KJ=np.linalg.norm(DCtanh)/DC
-                        #         Ko_tube[f_tube]=np.linalg.norm(Dx)/np.linalg.norm(DC)
-                        #         flag_obstacle[2+f_tube]=1
-                        #     if flag_obstacle[2+f_tube]==1:
-                        #         DCtanh=get_derivative(x0[6+2*f_tube:8+2*f_tube],intersectionP[2+f_tube],a,b)
-                        #     # if f_tube==1:
-                        #         # force_x_tube.append(np.linalg.norm(Dx))
-                        #         # force_cos_tube.append(ktheta*np.linalg.norm(Dcos))
-                        #         # force_ao_tube.append(Ko_tube[f_tube]*np.linalg.norm(DCtanh))
-                        #         # Force_tube=[force_x_tube,force_cos_tube,force_ao_tube]
-                        #         # Forceplot_tube.on_running(Force_tube)
-
-                        # Dcos1=getdcos_to_x(x0[:2],x0[3:5],x0[8:10],xs,J[2:4,:2],J[2:4,-2:])
-                      
-                        # DCtanhx=[np.zeros((2,1)),np.zeros((2,1))]
-                        # for io in range(2): 
-                        #     Ctheta=np.dot((intersectionP[io][0] - x1[3*io:3*io+2]), (intersectionP[io][1]- x1[3*io:3*io+2])) / np.linalg.norm(intersectionP[io][0]- x1[3*io:3*io+2]) / np.linalg.norm(intersectionP[io][1]-x1[3*io:3*io+2])
-                        #     if Ctheta<Sf and flag_obstacle[io]==0:
-                        #         DCtanhx[io]=get_derivative(x0,intersectionP[io],a,b)
-                        #     # calculate the derivative
-                        #         Ko[io]=np.linalg.norm(Dx)/np.linalg.norm(DCtanhx[io])
-                        #         flag_obstacle[io]=1
-                        #     if flag_obstacle[io]==1:
-                        #         DCtanhx[io]=get_derivative(x0,intersectionP[io],a,b)
-                        # # for f_tube in range(N_target):
-                        # #    
-                        # #     Ko_tube[f_tube,io]=np.linalg.norm(Dx[io])/np.linalg.norm(DC)
-                        # obj = 0 #### cost
-                        # Kt=10000
-                        # ddp=1.5
-                        # force1_x.append(np.linalg.norm(Dx))
-                        # force1_cos.append(ktheta*np.linalg.norm(Dcos1))
-                        # force1_ao.append(Ko[0]*np.linalg.norm(DCtanhx[0]))
-                        # Force1=[force1_x,force1_cos,force1_ao]
-                        # Forceplot1.on_running(Force1)
-                        # force2_x.append(np.linalg.norm(Dx))
-                        # force2_cos.append(ktheta*np.linalg.norm(Dcos1))
-                        # force2_ao.append(Ko[1]*np.linalg.norm(DCtanhx[1]))
-                        # Force2=[force2_x,force2_cos,force2_ao]
-                        # Forceplot2.on_running(Force2)
+                    # if Obstacle.flag_side is True:
+                    #     if Ctheta[i,j]>-0.5:
+                    #         F[i,j]=-1
+                    #     else:
+                    #         F[i,j]=3*Ctheta[i,j]-4*Ctheta[i,j]**3
+                    # else:
+                    #     if Ctheta[i,j]>0.5:
+                    #         F[i,j]=-1
+                    #     else:
+                    #         F[i,j]=-(-1+2*Ctheta[i,j]**2)*(16*Ctheta[i,j]**4-16*Ctheta[i,j]**2+1)
                         obj = 0 
-                        Kt=10000
+                        Kt=1000
                         ddp=1.5
+                        KO=0.1
                         for i in range(N):
                             obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T).T])-\
-                                ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)-\
-                                K.Ko[0]*ca.tanh(a*(ca.dot(ca.DM(iP.P[0][0].reshape(1,-1))- X[i,:2], ca.DM(iP.P[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(iP.P[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(iP.P[0][1].reshape(1,-1))- X[i,:2]))+b)-\
-                                K.Ko[1]*ca.tanh(a*(ca.dot(ca.DM(iP.P[1][0].reshape(1,-1))- X[i,3:5], ca.DM(iP.P[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(iP.P[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(iP.P[1][1].reshape(1,-1)) - X[i,3:5]))+b)+\
+                                ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)+\
                                 Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)+\
                                 Kt*ca.if_else(ca.norm_2(X[i,3:5].T-Target_circle[:2])<Target_circle[2]*(ddp+0.4),(ca.norm_2(X[i,3:5].T-Target_circle[:2])-Target_circle[2]*(ddp+0.4))**2,0)
                             for f_tube in range(N_target):
-                                if f_tube==1:
-                                    obj=obj-K.Ko_tube[f_tube]*ca.tanh(a*(ca.dot(ca.DM(iP.P[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(iP.P[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(iP.P[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(iP.P[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]))+b)
                                 obj=obj+Kt*ca.if_else(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
-                    
+                                Ctheta_tube=ca.dot(ca.DM(iP.P[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(iP.P[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube])/ca.norm_2(iP.P[2+f_tube][0].reshape(1,-1)- X[i,6+2*f_tube:8+2*f_tube])/ca.norm_2(iP.P[2+f_tube][1].reshape(1,-1) - X[i,6+2*f_tube:8+2*f_tube])
+                                # if iP.flag_side[2+f_tube]==1:
+                                    # obj=obj+ KO*ca.if_else(Ctheta_tube>-0.5,-1,3*Ctheta_tube-4*Ctheta_tube**3)
+                                obj=obj+KO*ca.if_else(Ctheta_tube>0.5,-1,ca.if_else(Ctheta_tube<0,1,-(-1+2*Ctheta_tube**2)*(16*Ctheta_tube**4-16*Ctheta_tube**2+1)))
+                            #     else:
+                            #         # obj=obj+KO*ca.if_else(Ctheta_tube>0.5,-1,-(-1+2*Ctheta_tube**2)*(16*Ctheta_tube**4-16*Ctheta_tube**2+1))
+                            #         obj=obj+KO*ca.if_else(Ctheta_tube>math.sqrt(3)/2,-1,ca.if_else(Ctheta_tube<0.5,1,(-1+2*Ctheta_tube**2)*(16*Ctheta_tube**4-16*Ctheta_tube**2+1)))
+                            Ctheta1= ca.dot(ca.DM(iP.P[0][0].reshape(1,-1))- X[i,:2], ca.DM(iP.P[0][1].reshape(1,-1)) - X[i,:2])/ca.norm_2(iP.P[0][0].reshape(1,-1)- X[i,:2])/ca.norm_2(iP.P[0][1].reshape(1,-1) - X[i,:2])
+                            Ctheta2= ca.dot(ca.DM(iP.P[1][0].reshape(1,-1))- X[i,3:5], ca.DM(iP.P[1][1].reshape(1,-1)) - X[i,3:5]) /ca.norm_2(iP.P[1][0].reshape(1,-1)- X[i,3:5])/ca.norm_2(iP.P[1][1].reshape(1,-1) - X[i,3:5])
+                            # if iP.flag_side[0]==1:
+                                # obj=obj+KO*ca.if_else(Ctheta1>-0.5,-1,3*Ctheta1-4*Ctheta1**3)
+                            obj=obj+KO*ca.if_else(Ctheta1>0.5,-1,ca.if_else(Ctheta1<0,1,-(-1+2*Ctheta1**2)*(16*Ctheta1**4-16*Ctheta1**2+1)))
+                            # else:
+                                # obj=obj+KO*ca.if_else(Ctheta1>0.5,-1,-(-1+2*Ctheta1**2)*(16*Ctheta1**4-16*Ctheta1**2+1))
+                                # obj=obj+KO*ca.if_else(Ctheta1>math.sqrt(3)/2,-1,ca.if_else(Ctheta1<0.5,1,(-1+2*Ctheta1**2)*(16*Ctheta1**4-16*Ctheta1**2+1)))
+                            # if iP.flag_side[1]==1:
+                                # obj=obj+KO*ca.if_else(Ctheta2>-0.5,-1,3*Ctheta2-4*Ctheta2**3)
+                            obj=obj+KO*ca.if_else(Ctheta2>0.5,-1,ca.if_else(Ctheta2<0,1,-(-1+2*Ctheta2**2)*(16*Ctheta2**4-16*Ctheta2**2+1)))
+                            # else:
+                            #     # obj=obj+KO*ca.if_else(Ctheta2>0.5,-1,-(-1+2*Ctheta2**2)*(16*Ctheta2**4-16*Ctheta2**2+1)) 
+                            #     obj=obj+KO*ca.if_else(Ctheta2>math.sqrt(3)/2,-1,ca.if_else(Ctheta2<0.5,1,(-1+2*Ctheta2**2)*(16*Ctheta2**4-16*Ctheta2**2+1)))
+                            
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                         solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)

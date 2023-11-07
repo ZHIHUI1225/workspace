@@ -118,6 +118,13 @@
 /home/romi/workspace/build/mpc/CMakeFiles/rebuild_cache.dir
 /home/romi/workspace/build/mpc/CMakeFiles/edit_cache.dir
 /home/romi/workspace/build/mpc/CMakeFiles/test.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/install/strip.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/install/local.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/install.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/list_install_components.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/rebuild_cache.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/edit_cache.dir
+/home/romi/workspace/build/obstacle_detect/CMakeFiles/test.dir
 /home/romi/workspace/build/pulling/CMakeFiles/install/strip.dir
 /home/romi/workspace/build/pulling/CMakeFiles/install/local.dir
 /home/romi/workspace/build/pulling/CMakeFiles/install.dir

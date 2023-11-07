@@ -59,6 +59,7 @@ all: starlaunch/all
 all: beginner_tutorials/all
 all: co_transform/all
 all: mpc/all
+all: obstacle_detect/all
 all: pulling/all
 all: record/all
 all: camera_drive/all
@@ -74,6 +75,7 @@ preinstall: starlaunch/preinstall
 preinstall: beginner_tutorials/preinstall
 preinstall: co_transform/preinstall
 preinstall: mpc/preinstall
+preinstall: obstacle_detect/preinstall
 preinstall: pulling/preinstall
 preinstall: record/preinstall
 preinstall: camera_drive/preinstall
@@ -94,6 +96,7 @@ clean: starlaunch/clean
 clean: beginner_tutorials/clean
 clean: co_transform/clean
 clean: mpc/clean
+clean: obstacle_detect/clean
 clean: pulling/clean
 clean: record/clean
 clean: camera_drive/clean
@@ -324,6 +327,24 @@ mpc/preinstall:
 mpc/clean:
 
 .PHONY : mpc/clean
+
+#=============================================================================
+# Directory level rules for directory obstacle_detect
+
+# Recursive "all" directory target.
+obstacle_detect/all:
+
+.PHONY : obstacle_detect/all
+
+# Recursive "preinstall" directory target.
+obstacle_detect/preinstall:
+
+.PHONY : obstacle_detect/preinstall
+
+# Recursive "clean" directory target.
+obstacle_detect/clean:
+
+.PHONY : obstacle_detect/clean
 
 #=============================================================================
 # Directory level rules for directory pulling

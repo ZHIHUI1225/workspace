@@ -1,6 +1,7 @@
 #!/usr/bin/env python -m memory_profiler
 from std_msgs.msg import Int8
 from std_msgs.msg import Bool
+
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
@@ -122,8 +123,8 @@ if __name__ == '__main__':
                 point = Point32()
                 point.z = 40*1.5037594e-3
                 if QRID==1:
-                    point.x = 130*1.5037594e-3
-                    point.y = 150*1.5306122e-3
+                    point.x = 140*1.5037594e-3
+                    point.y = 160*1.5306122e-3
                     Targetzone_pub.publish(point)
                     distence=1000
                     Target_ID=Int8()

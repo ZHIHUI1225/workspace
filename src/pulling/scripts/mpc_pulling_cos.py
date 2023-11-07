@@ -161,6 +161,16 @@ def get_derivative(x1,P,a,b):
     DCtanh=a*(1-np.square(math.tanh(3)))*DCtheta_vector
     return DCtanh
 
+def get_cos_derivative(x,P):
+    # update the cost function                   
+    x1=np.concatenate(x)
+    Ctheta=np.dot((P[0] - x1[:2]), (P[1]- x1[:2])) / np.linalg.norm(P[0]- x1[:2]) / np.linalg.norm(P[1]-x1[:2])
+    l1=np.linalg.norm(P[0] - x1[:2])
+    l2=np.linalg.norm(P[1]- x1[:2])
+    z1=(P[0] - x1[:2])/ l1
+    z2=(P[1]- x1[:2]) / l2
+    DCtheta_vector=(1/l2-Ctheta/l1)*z1+(1/l1-Ctheta/l2)*z2
+    return DCtheta_vector
 
 class Jmatrix():
     def __init__(self,P:int):
@@ -257,9 +267,13 @@ class Plotupdate():
     def on_running(self, error):
         timec = time.time()
         self.xdata.append(timec-self.starttime)
-        for i in range(self.num):
-            self.line_objects[i].set_xdata(self.xdata)
-            self.line_objects[i].set_ydata(error[i])
+        if self.num==1:
+            self.line_objects[0].set_xdata(self.xdata)
+            self.line_objects[0].set_ydata(error)
+        else:
+            for i in range(self.num):
+                self.line_objects[i].set_xdata(self.xdata)
+                self.line_objects[i].set_ydata(error[i])
         self.ax.relim()
         self.ax.autoscale_view()
         #We need to draw *and* flush
@@ -382,7 +396,12 @@ if __name__ == '__main__':
         vel = [0]*2
         Robot = QRrobot()
         Obstacle=Obstacle_QR()
-        
+        force1_x=[]
+        force1_ao=[]
+        force2_x=[]
+        force2_ao=[]
+        force_x_tube=[]
+        force_ao_tube=[]
       
         JM=Jmatrix(P=N_target*2)
         # Frame=frame_image()
@@ -464,6 +483,8 @@ if __name__ == '__main__':
                 if object_flag==0 and Targe_id.ID!=0:
                     distance_error=Plotupdate('distance error', 'distance error(m)',1,[])
                     Forceplot_object=Plotupdate('Force_object','derivative',2,['attrative','push'])
+                    Forceplot_agent1=Plotupdate('Force_agent1','derivative',2,['attrative','push'])
+                    Forceplot_agent2=Plotupdate('Force_agent2','derivative',2,['attrative','push'])
                     model_errorplot=PlotUpdate2(1)
                     model_error_x=[]
                     model_error_y=[]
@@ -499,12 +520,6 @@ if __name__ == '__main__':
                         ubg.append(L*0.8)
                     for i in range(N):
                         [M,O]=carotationR(X[i,:])
-                        # b=ca.mtimes(M,X[i,3:5].T)-ca.mtimes(M,O)
-                        # # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
-                        # Kb=ca.fabs(b[1]/b[0])
-                        # a=ca.mtimes(M,X[i,:2].T)-ca.mtimes(M,O)
-                        # # b=ca.mtimes(M,X[i,3+n_tube:n_tube+5].T)-ca.mtimes(M,O)
-                        # Ka=ca.fabs(a[1]/a[0])
                         Xnew[i,:]=(ca.mtimes(M,(X[i+1,6:8]).T)).T-ca.mtimes(M,O).T
                         g.append(Xnew[i,0])
                         lbg.append(-1)
@@ -512,22 +527,7 @@ if __name__ == '__main__':
                         g.append(Xnew[i,1])
                         lbg.append(0)
                         ubg.append(1)
-                    # for a in range(len(Robot.robotID)):
-                    #     if Robot.robotID[a]>2 and Robot.robotID[a]<10 and Robot.robotID[a]!=Targe_id.ID:
-                    #         C=np.array([Robot.robotx[a], Robot.roboty[a], r_object* 1.5037594e-3])
-                    #         for i in range(N+1):
-                    #             g.append(ca.norm_2(X[i,:2].T-C[:2]))
-                    #             lbg.append(C[2]*2.1)
-                    #             ubg.append(200)
-                    #             g.append(ca.norm_2(X[i,3:5].T-C[:2]))
-                    #             lbg.append(C[2]*2.1)
-                    #             ubg.append(200)
-                    #             ddp=1.3
-                    #             for j in range(N_target):
-                    #                 # g.append(ca.norm_2((X[i,:2].T+X[i,3:5].T+X[i,-2:].T)/3-C[:2]))
-                    #                 g.append(ca.norm_2(X[i,-2:].T-C[:2]))
-                    #                 lbg.append(C[2]*4)
-                    #                 ubg.append(200)
+                   
 
                     r1=np.array([[Robot.robotx[0]],[Robot.roboty[0]]])
                     r2=np.array([[Robot.robotx[1]],[Robot.roboty[1]]])
@@ -564,23 +564,19 @@ if __name__ == '__main__':
                     # for i in range(1,N_target,1):
                     #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
                     # x_center=x0[:2]+x0[3:5]
-                    flag_Ko=np.zeros((3,1))
-                    Ko=np.zeros((3,1))
-                    Kmid=0
-                    flag_Kmid=0
+        
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
                     # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
-                    if  np.linalg.norm(x_center[0]-Targe_zone.target.x)> 40* 1.5037594e-3 or np.linalg.norm(x_center[1]-Targe_zone.target.y)> 30* 1.5037594e-3:
+                    if  np.linalg.norm(x_center[0]-Targe_zone.target.x)> 40* 1.5037594e-3 or np.linalg.norm(x_center[1]-Targe_zone.target.y)> 35* 1.5037594e-3:
                     # if  x_center[0]<Target_circle[0]:
                         transport_flag=False
                         transport_flag_pub.publish(transport_flag)
                         # update the cost function                   
                         # kcos=2
-                        Sf=0.4
-                        Smin=0.2
-                        a=3/(Sf-Smin)
-                        b=-a*Smin
+                        Sf=0.5
+                        Smin=0
+                        
                         x1=np.concatenate(x0)
                         intersectionP=[]
                         intersectionP.append(Obstacle.calculateP(x1[:2]).copy())
@@ -588,54 +584,46 @@ if __name__ == '__main__':
                         intersectionP.append(Obstacle.calculateP(x1[6:8]).copy())
                         intersectionP.append(Obstacle.calculateP((x1[:2]+x1[3:5])/2).copy())
                         #the middle point of the tube
-                        DCtanh=0
+                        KO=0.2
                         for f_tube in range(3):
                             Ctheta=np.dot((intersectionP[f_tube][0] - x1[3*f_tube:2+3*f_tube]), (intersectionP[f_tube][1]- x1[3*f_tube:2+3*f_tube])) / np.linalg.norm(intersectionP[f_tube][0]- x1[3*f_tube:2+3*f_tube]) / np.linalg.norm(intersectionP[f_tube][1]-x1[3*f_tube:2+3*f_tube])
                             if f_tube <2:
                                 Dx=distence_to_x(JM.J[:,2*f_tube:2*f_tube+2],x1[6:8],xs)
                             else:
                                 DX=2*np.transpose(x1[6:8]-xs)
-                            if Ctheta<Sf and flag_Ko[f_tube]==0:
-                                DCtanh=get_derivative(x1[3*f_tube:2+3*f_tube],intersectionP[f_tube],a,b)
-                                flag_Ko[f_tube]=1
-                                Ko[f_tube]=np.linalg.norm(DX)/np.linalg.norm(DCtanh)
-                            if f_tube==2:#object
+                            
+                            DC=get_cos_derivative(x0[3*f_tube:2+3*f_tube],intersectionP[f_tube])
+
+                            if Ctheta >0.5:
+                                DC=0*DC
+                            elif Ctheta<0:
+                                DC=0*DC
+                            else:
+                                DC=4*Ctheta*(16*Ctheta**4-16*Ctheta**2+1)+(2*Ctheta**2-1)*(16*4*Ctheta**3-32*Ctheta)*DC
+                            if f_tube==0:
+                                force1_x.append(np.linalg.norm(Dx))
+                                force1_ao.append(KO*np.linalg.norm(DC))
+                                Force1=[force1_x,force1_ao]
+                                Forceplot_agent1.on_running(Force1)
+                            elif f_tube==1:
+                                force2_x.append(np.linalg.norm(Dx))
+                                force2_ao.append(KO*np.linalg.norm(DC))
+                                Force2=[force2_x,force2_ao]
+                                Forceplot_agent2.on_running(Force2)
+                            else: #object       
                                 force_x.append(np.linalg.norm(Dx))
-                                force_ao.append(Ko[f_tube]*np.linalg.norm(DCtanh))
+                                force_ao.append(KO*np.linalg.norm(DC))
                                 Force=[force_x,force_ao]
                                 Forceplot_object.on_running(Force)
-
-                        Ctheta=np.dot((intersectionP[3][0] - (x1[:2]+x1[3:5])/2), (intersectionP[3][1]- (x1[:2]+x1[3:5])/2)) / np.linalg.norm(intersectionP[3][0]- (x1[:2]+x1[3:5])/2) / np.linalg.norm(intersectionP[3][1]-(x1[:2]+x1[3:5])/2)
-                        if Ctheta<Sf and flag_Kmid==0:
-                            flag_Kmid=1
-                            DCtanh=get_derivative((x1[:2]+x1[3:5])/2,intersectionP[3],a,b)
-                            Dx=(distence_to_x(JM.J[:,:2],x1[6:8],xs)+distence_to_x(JM.J[:,2:4],x1[6:8],xs))/2
-                            flag_Kmid=0.2*np.linalg.norm(Dx)/np.linalg.norm(DCtanh)
-                            # Ctanh=math.tanh(a*Ctheta+b)
-                            # l1=np.linalg.norm(intersectionP[f_tube][0] - x1[3*f_tube:2+3*f_tube])
-                            # l2=np.linalg.norm(intersectionP[f_tube][1]- x1[3*f_tube:2+3*f_tube])
-                            # z1=(intersectionP[f_tube][0] - x1[3*f_tube:2+3*f_tube])/ l1
-                            # z2=(intersectionP[f_tube][1]- x1[3*f_tube:2+3*f_tube]) / l2
-                            # DCtheta_vector=(1/l2-Ctanh/l1)*z1+(1/l1-Ctanh/l2)*z2
-                            # DCtanh=a*(1-np.square(math.tanh(2.5)))*DCtheta_vector
-                            
-                        
-                        # Dx=[]
-                        # for io in range(2):
-                        #     Dx.append(distence_to_x(JM.J[:,2*io:2*io+2],x1[6:8],xs))
-                        #     Ko[io]=np.linalg.norm(Dx[io])/np.linalg.norm(Dtanh_tube[io])
-
-                        # DC1=np.dot(Dtanh_tube[2],JM.J[:,:2])
-                        # DC2=np.dot(Dtanh_tube[2],JM.J[:,2:4])
                         
                         #### cost function
                         obj = 0 #### cost
                         for i in range(N):
-                            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([X[i,-2:]-P[-2:].T,Qr,(X[i,-2:]-P[-2:].T).T])-\
-                                Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
-                                Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)-\
-                                Ko[2]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2][0].reshape(1,-1))- X[i,6:8], ca.DM(intersectionP[2][1].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[2][0].reshape(1,-1)) - X[i,6:8]) / ca.norm_2(ca.DM(intersectionP[2][1].reshape(1,-1)) - X[i,6:8]))+b)
-                                # Kmid*ca.tanh(a*(ca.dot(ca.DM(intersectionP[3][0].reshape(1,-1))- (X[i,:2]+X[i,3:5])/2, ca.DM(intersectionP[3][1].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2)/ ca.norm_2(ca.DM(intersectionP[2][0].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2) / ca.norm_2(ca.DM(intersectionP[2][1].reshape(1,-1)) - (X[i,:2]+X[i,3:5])/2))+b)
+                            obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([X[i,-2:]-P[-2:].T,Qr,(X[i,-2:]-P[-2:].T).T])
+                            for k in range(3):
+                                Costheta=ca.dot(ca.DM(intersectionP[k][0].reshape(1,-1))- X[i,3*k:3*k+2], ca.DM(intersectionP[k][1].reshape(1,-1)) - X[i,3*k:3*k+2]) / ca.norm_2(ca.DM(intersectionP[k][0].reshape(1,-1)) - X[i,3*k:3*k+2]) / ca.norm_2(ca.DM(intersectionP[k][1].reshape(1,-1))- X[i,3*k:3*k+2])
+                                obj=obj+KO*ca.if_else(Costheta>0.5,-1,ca.if_else(Costheta<0,1,-(-1+2*Costheta**2)*(16*Costheta**4-16*Costheta**2+1)))
+                               
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                         solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
@@ -672,6 +660,8 @@ if __name__ == '__main__':
                             model_errorplot.save_plot('modelerror'+str(Targe_id.ID)+'.png','Jerrordate'+str(Targe_id.ID)+'.csv')
                             distance_error.save_plot('transport error'+str(Targe_id.ID)+'.png','transport'+str(Targe_id.ID)+'.csv')
                             Forceplot_object.save_plot('Force_object'+str(Targe_id.ID)+'.png','Force_object'+str(Targe_id.ID)+'.csv')
+                            Forceplot_agent1.save_plot('Agent1'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','Agent1'+str(Targe_id.ID)+'.csv')
+                            Forceplot_agent2.save_plot('Agent2'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','Agent2'+str(Targe_id.ID)+'.csv')
                         ran_vel=np.zeros((1,4))
                         vel_msg = Float64MultiArray(data=ran_vel[0])
                         rospy.loginfo(vel_msg)

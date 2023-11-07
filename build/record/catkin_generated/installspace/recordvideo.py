@@ -1,6 +1,7 @@
 #!/usr/bin/env python -m memory_profiler
 from std_msgs.msg import Int8
 from std_msgs.msg import Bool
+
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
@@ -198,8 +199,8 @@ if __name__ == '__main__':
                     P=(int(200),int(200))
                     cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
                 # else:
-                    P=(int(w-200),int(h-200))
-                    cv2.rectangle(Frame.image,(P[0],P[1]),(w,h),(255, 0, 0),3)
+                    # P=(int(w-200),int(h-200))
+                    # cv2.rectangle(Frame.image,(P[0],P[1]),(w,h),(255, 0, 0),3)
                 if QRID==1:
                     if feature.middlepoint.x!=0 and F.enclose_flag is False:
                         for xk in range(len(feature.feature_point.points)):
