@@ -176,6 +176,8 @@ catkin_install_python(PROGRAMS
   scripts/mpc_EGO.py
   scripts/mpc_piecewise.py
   scripts/mpc_softconstraints.py
+  scripts/mpc_scale.py
+  scripts/mpc_svm_obstacle.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

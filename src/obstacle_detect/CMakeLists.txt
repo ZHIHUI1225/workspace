@@ -162,6 +162,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/Obstacle.py
   scripts/Obstacle_new.py
+  scripts/Obstacle_scale.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

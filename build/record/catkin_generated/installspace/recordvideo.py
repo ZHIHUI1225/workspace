@@ -1,7 +1,8 @@
 #!/usr/bin/env python -m memory_profiler
 from std_msgs.msg import Int8
 from std_msgs.msg import Bool
-
+from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float64MultiArray
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
@@ -19,13 +20,14 @@ import math
 import rospy
 import tf
 import time
+from scipy.special import comb
 import matplotlib.pyplot as plt                                 # TF坐标变换库
 from tf import TransformListener, TransformerROS
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import TransformStamped
 from numpy import linalg as LA
 import scipy.optimize as opt
-
+N_target=3 # feature points number
 class Point_tube:
     def __init__(self,name):
         self.feature_point=PointCloud()
@@ -95,6 +97,50 @@ class FLAG():
     def transport_flag_callback(self,msg):
         self.transport_flag=msg.data
 
+class Bezier_polygon():
+    def __init__(self):
+        self.P=PointCloud()
+        self.flag_side=[]
+        self.sub=rospy.Subscriber('/controlpoints1',Float32MultiArray,self.sub_callback,queue_size=10)
+    def sub_callback(self,msg):
+        self.P=PointCloud()
+        point=Point32()
+        for i in range(N_target+2):
+            point=Point32()
+            point.x= msg.data[2*i]
+            point.y= msg.data[2*i+1]
+            self.P.points.append(point)
+
+def bernstein_poly(i, n, t):
+    """
+     The Bernstein polynomial of n, i as a function of t
+    """
+    return comb(n, i) * ( t**(n-i) ) * (1 - t)**i
+
+def bezier_curve(points, nTimes=50):
+    """
+       Given a set of control points, return the
+       bezier curve defined by the control points.
+
+       points should be a list of lists, or list of tuples
+       such as [ [1,1], 
+                 [2,3], 
+                 [4,5], ..[Xn, Yn] ]
+        nTimes is the number of time steps, defaults to 1000
+    """
+
+    nPoints = len(points)
+    xPoints = np.array([p[0] for p in points])
+    yPoints = np.array([p[1] for p in points])
+
+    t = np.linspace(0.0, 1.0, nTimes)
+
+    polynomial_array = np.array([ bernstein_poly(i, nPoints-1, t) for i in range(0, nPoints)   ])
+
+    xvals = np.dot(xPoints, polynomial_array)
+    yvals = np.dot(yPoints, polynomial_array)
+
+    return xvals, yvals
 
 if __name__ == '__main__':
     try:
@@ -105,6 +151,7 @@ if __name__ == '__main__':
         QRID=rospy.get_param('~QRID')
         F=FLAG(QRID)
         F2=FLAG(2)
+        Polygon=Bezier_polygon()
         feature=Point_tube(pointname)
         feature34=Point_tube('/feature_points34')
         TargetID_pub=rospy.Publisher('TargetID'+str(QRID),Int8,queue_size=10)
@@ -121,9 +168,9 @@ if __name__ == '__main__':
                 h,w,c=Frame.image.shape #width height channel
                  # Create Point32 message
                 point = Point32()
-                point.z = 40*1.5037594e-3
+                point.z = 45*1.5037594e-3
                 if QRID==1:
-                    point.x = 130*1.5037594e-3
+                    point.x = 150*1.5037594e-3
                     point.y = 150*1.5306122e-3
                     Targetzone_pub.publish(point)
                     distence=1000
@@ -139,7 +186,7 @@ if __name__ == '__main__':
                                 Target_ID.data=ID
                     TargetID_pub.publish(Target_ID.data)
                 else:
-                    point.x = (w-120)*1.5037594e-3
+                    point.x = (w-150)*1.5037594e-3
                     point.y = (h-150)*1.5306122e-3
                     Targetzone_pub.publish(point)
                     distence=1000
@@ -195,17 +242,32 @@ if __name__ == '__main__':
                     go_flag.data=False
                     mpc1_flag_pub.publish(go_flag.data)
                     Targetzone_pub.publish(point)
-                # if QRID==1:
-                    P=(int(200),int(200))
-                    cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
+                # if QRID==2:
+                P=(int(200),int(200))
+                cv2.rectangle(Frame.image,(0,0),(P[0],P[1]),(255, 0, 0),3)
                 # else:
-                    # P=(int(w-200),int(h-200))
-                    # cv2.rectangle(Frame.image,(P[0],P[1]),(w,h),(255, 0, 0),3)
+                # P=(int(w-200),int(h-200))
+                # cv2.rectangle(Frame.image,(P[0],P[1]),(w,h),(255, 0, 0),3)
                 if QRID==1:
+                    polygon_points=[]
+                    if len(Polygon.P.points)!=0 and F.enclose_flag is False:
+                        for ip in range(len(Polygon.P.points)):
+                            center=(int(Polygon.P.points[ip].x),int(Polygon.P.points[ip].y))
+                            # cv2.circle(Frame.image, center, 3, (255, 0, 255), -1)
+                            polygon_points.append([int(Polygon.P.points[ip].x),int(Polygon.P.points[ip].y)])
+                        # cv2.polylines(Frame.image,[np.array(polygon_points)],isClosed=True,color=(0,255,0),thickness=2)
+                        [xvals, yvals]=bezier_curve(polygon_points)
+                        points = np.column_stack((xvals, yvals)).astype(np.int32)
+                        # Draw the curve by connecting the points
+                        color = (0, 255, 255)  # Green color in BGR format
+                        is_closed = False  # Change to True if the curve should be closed
+                        thickness = 2
+                        cv2.polylines(Frame.image, [points], is_closed, color, thickness)
                     if feature.middlepoint.x!=0 and F.enclose_flag is False:
                         for xk in range(len(feature.feature_point.points)):
                             center=(int(feature.feature_point.points[xk].x),int(feature.feature_point.points[xk].y))
                             cv2.circle(Frame.image, center, 2, (0, 0, 255), -1)
+                        
                     if feature34.middlepoint.x!=0 and F2.enclose_flag is False:
                         for xk in range(len(feature34.feature_point.points)):
                             center34=(int(feature34.feature_point.points[xk].x),int(feature34.feature_point.points[xk].y))

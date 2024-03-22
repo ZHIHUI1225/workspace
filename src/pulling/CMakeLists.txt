@@ -164,6 +164,7 @@ catkin_install_python(PROGRAMS
   scripts/mpc_pulling.py
   scripts/mpc_pulling_cos.py
   scripts/mpc_pulling_avoidance.py
+  scripts/mpc_pulling_svm.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

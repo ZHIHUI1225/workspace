@@ -35,27 +35,45 @@
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node>  -->
+	<!-- <node pkg="mpc" type="mpc_scale.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node>  -->
 
-	<node pkg="mpc" type="mpc_piecewise.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<node pkg="obstacle_detect" type="Obstacle_scale.py" name="Obstacle1" output="screen" clear_params="true"> 
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
 
-	<node pkg="pulling" type="mpc_pulling_cos.py" name="mpc_transport1" output="screen" clear_params="true"> 
+	<node pkg="mpc" type="mpc_svm_obstacle.py" name="mpc_envelope1" output="screen" clear_params="true">
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
 
-	<node pkg="obstacle_detect" type="Obstacle_new.py" name="Obstacle" output="screen" clear_params="true"> 
+	<!-- <node pkg="mpc" type="mpc_EGO.py" name="mpc_envelope1" output="screen" clear_params="true">
+	<param name="feature" value="$(arg feature1)"/>
+	<param name="QRID" value="$(arg QRID1)"/>
+	</node>  -->
+
+	<node pkg="pulling" type="mpc_pulling_svm.py" name="mpc_transport1" output="screen" clear_params="true"> 
 	<param name="feature" value="$(arg feature1)"/>
 	<param name="QRID" value="$(arg QRID1)"/>
 	</node> 
-	<!-- <node pkg="mpc" type="mpc_multipoints_hard_constraints.py" name="mpc_envelope2" output="screen" clear_params="true">
+
+
+
+	
+	<!-- <node pkg="mpc" type="mpc_scale.py" name="mpc_envelope2" output="screen" clear_params="true">
 	<param name="feature" value="$(arg feature2)"/>
 	<param name="QRID" value="$(arg QRID2)"/>
-	</node> 
+	</node>  -->
 
-	<node pkg="pulling" type="mpc_pulling_avoidance.py" name="mpc_transport2" output="screen" clear_params="true"> 
+	<!-- <node pkg="obstacle_detect" type="Obstacle_scale.py" name="Obstacle2" output="screen" clear_params="true"> 
+	<param name="feature" value="$(arg feature2)"/>
+	<param name="QRID" value="$(arg QRID2)"/>
+	</node>  -->
+
+	<!-- <node pkg="pulling" type="mpc_pulling_svm.py" name="mpc_transport2" output="screen" clear_params="true"> 
 	<param name="feature" value="$(arg feature2)"/>
 	<param name="QRID" value="$(arg QRID2)"/>
 	</node>  -->
@@ -81,5 +99,9 @@
 	<!-- <node pkg="mpc" type="Jmatrix_Bezier.py" name="Jmatrix_Bezier" output="screen"/>  -->
 	<!-- <node pkg="mpc" type="mpc_Bezier.py" name="mpc_Bezier" output="screen"/>  -->
 
+	<node name="keyboard" pkg="keyboard_publisher" type="keyboard.py" output="screen"/>
+
+  	<!-- <node name="key_publisher_node" pkg="keyboard_publisher" type="key_publisher_node.py" output="screen"/>
+ 	<node name="key_to_twist_node" pkg="keyboard_publisher" type="key_to_twist_node.py" output="screen"/> -->
 	
 </launch> 

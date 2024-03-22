@@ -4,6 +4,7 @@
 from std_msgs.msg import Int8
 from std_msgs.msg import Bool
 import rospy
+from std_msgs.msg import String
 from sensor_msgs.msg import PointCloud
 from geometry_msgs.msg import Point32
 from geometry_msgs.msg import Pose,PoseArray,PoseStamped
@@ -40,7 +41,7 @@ wheel_diameter = 31e-3  # m
 l_center=11* 1.5037594e-3
 L=200* 1.5037594e-3 #the length of tube
 N_target=3 # feature points number
-# plt.ion()
+plt.ion()
 
 def point_line_distance(point, start, end):
     dx = end[0] - start[0]
@@ -239,9 +240,9 @@ class Targe_ID:
         self.flag=False
         self.transport_flag=False
         self.ID=0
-        self.sub=rospy.Subscriber('goflag',Bool,self.flag_callback,queue_size=10)
-        self.subID=rospy.Subscriber('TargetID',Int8,self.ID_callback,queue_size=10)
-        self.transport_sub=rospy.Subscriber('transportflag',Bool,self.transport_flag_callback,queue_size=10)
+        self.sub=rospy.Subscriber('goflag'+str(QRID),Bool,self.flag_callback,queue_size=10)
+        self.subID=rospy.Subscriber('TargetID'+str(QRID),Int8,self.ID_callback,queue_size=10)
+        self.transport_sub=rospy.Subscriber('transportflag'+str(QRID),Bool,self.transport_flag_callback,queue_size=10)
     def flag_callback(self,msg):
         self.flag=msg.data
     def transport_flag_callback(self,msg):
@@ -302,56 +303,101 @@ class tubeshape():
         return points
 
 
-class PlotUpdate():
-    #Suppose we know the x range
-    #min_x = 0
-    #max_x = 300
+# class PlotUpdate():
+#     #Suppose we know the x range
+#     #min_x = 0
+#     #max_x = 300
 
-    def __init__(self,N):
+#     def __init__(self,N):
+#         #Set up plot
+#         #self.figure, self.ax = plt.subplots()
+#         self.figure, (self.ax1, self.ax2) = plt.subplots(1, 2, sharey=True)
+#         self.lines1=[]
+#         self.lines2=[]
+#         self.number=N
+#         for i in range(self.number):
+#             line, = self.ax1.plot([],[],label=str(i+1)) #error_x
+#             self.lines1.append(line)
+#             line, = self.ax2.plot([],[],label=str(i+1)) #error_x
+#             self.lines2.append(line)
+#         #self.lines1, = self.ax1.plot([],[]) #error_x
+#         #self.lines2, = self.ax2.plot([],[]) #error_y
+#         #Autoscale on unknown axis and known lims on the other
+#         self.ax1.set_autoscaley_on(True)
+#         #self.ax1.set_xlim(self.min_x, self.max_x)
+#         self.ax2.set_autoscaley_on(True)
+#         #self.ax2.set_xlim(self.min_x, self.max_x)
+#         #Other stuff
+#         self.ax1.grid()
+#         self.ax2.grid()
+#         self.ax1.legend(loc='upper left')
+#         self.ax2.legend(loc='upper left')
+#         ...
+#     def on_running(self, error_x, error_y):
+#         #Update data (with the new _and_ the old points)
+#         for i in range(self.number):
+#             xdata=np.arange(0,len(error_x))
+#             self.lines1[i].set_xdata(xdata)
+#             self.lines1[i].set_ydata(error_x)
+#             ydata=np.arange(0,len(error_y))
+#             self.lines2[i].set_xdata(ydata)
+#             self.lines2[i].set_ydata(error_y)
+#         #Need both of these in order to rescale
+#         self.ax1.relim()
+#         self.ax1.autoscale_view()
+#         self.ax2.relim()
+#         self.ax2.autoscale_view()
+#         #We need to draw *and* flush
+#         self.figure.canvas.draw()
+#         self.figure.canvas.flush_events()
+
+
+class Plotupdate():
+    def __init__(self,name,yname,num,Label):
         #Set up plot
-        #self.figure, self.ax = plt.subplots()
-        self.figure, (self.ax1, self.ax2) = plt.subplots(1, 2, sharey=True)
-        self.lines1=[]
-        self.lines2=[]
-        self.number=N
-        for i in range(self.number):
-            line, = self.ax1.plot([],[],label=str(i+1)) #error_x
-            self.lines1.append(line)
-            line, = self.ax2.plot([],[],label=str(i+1)) #error_x
-            self.lines2.append(line)
-        #self.lines1, = self.ax1.plot([],[]) #error_x
-        #self.lines2, = self.ax2.plot([],[]) #error_y
-        #Autoscale on unknown axis and known lims on the other
-        self.ax1.set_autoscaley_on(True)
-        #self.ax1.set_xlim(self.min_x, self.max_x)
-        self.ax2.set_autoscaley_on(True)
-        #self.ax2.set_xlim(self.min_x, self.max_x)
-        #Other stuff
-        self.ax1.grid()
-        self.ax2.grid()
-        self.ax1.legend(loc='upper left')
-        self.ax2.legend(loc='upper left')
-        ...
-    def on_running(self, error_x, error_y):
-        #Update data (with the new _and_ the old points)
-        for i in range(self.number):
-            xdata=np.arange(0,len(error_x))
-            self.lines1[i].set_xdata(xdata)
-            self.lines1[i].set_ydata(error_x)
-            ydata=np.arange(0,len(error_y))
-            self.lines2[i].set_xdata(ydata)
-            self.lines2[i].set_ydata(error_y)
-        #Need both of these in order to rescale
-        self.ax1.relim()
-        self.ax1.autoscale_view()
-        self.ax2.relim()
-        self.ax2.autoscale_view()
+        self.figure, self.ax = plt.subplots()
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
+        self.line_objects = []
+        self.num=num
+        if num==1:
+            line, = self.ax.plot([], [])
+            self.line_objects.append(line)
+        else:
+            for i in range(num):
+                line, = self.ax.plot([], [], label=Label[i])
+                self.line_objects.append(line)
+        self.starttime= time.time()
+        self.xdata=[]
+        self.ax.set_autoscaley_on(True)
+        self.ax.grid()
+        self.figure.suptitle(name)
+        self.ax.legend(loc='upper left')
+        self.ax.set_xlabel('time(s)',fontsize=8)
+        self.ax.set_ylabel(yname,fontsize=8)
+        self.figure.suptitle(name,fontsize=8)
+        self.ax.legend(loc='upper left')
+        self.ax.tick_params(axis='x', labelsize=8)
+        self.ax.tick_params(axis='y', labelsize=8)
+    def on_running(self, error):
+        timec = time.time()
+        self.xdata.append(timec-self.starttime)
+        for i in range(self.num):
+            self.line_objects[i].set_xdata(self.xdata)
+            self.line_objects[i].set_ydata(error[i])
+        self.ax.relim()
+        self.ax.autoscale_view()
         #We need to draw *and* flush
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
-
-
-
+    def save_plot(self,figname,dataname):
+        self.figure.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        for i in range(self.num):
+            dp.writerow(self.line_objects[i].get_xdata())
+            dp.writerow(self.line_objects[i].get_ydata())   
+        fp.close() 
 
 def getdcos_to_x1(X1,X2,qm,pt,J1,J2):
     l1=np.linalg.norm(pt-qm)
@@ -369,17 +415,79 @@ def distence_to_x(pv,pt,Qr):
     return D
 
 
+class Plotupdate():
+    def __init__(self,name,yname,num,Label):
+        #Set up plot
+        self.figure, self.ax = plt.subplots()
+        self.figure.set_figwidth(4) 
+        self.figure.set_figheight(2) 
+        self.line_objects = []
+        self.num=num
+        if num==1:
+            line, = self.ax.plot([], [])
+            self.line_objects.append(line)
+        else:
+            for i in range(num):
+                line, = self.ax.plot([], [], label=Label[i])
+                self.line_objects.append(line)
+        self.starttime= time.time()
+        self.xdata=[]
+        self.ax.set_autoscaley_on(True)
+        self.ax.grid()
+        self.figure.suptitle(name)
+        self.ax.legend(loc='upper left')
+        self.ax.set_xlabel('time(s)',fontsize=8)
+        self.ax.set_ylabel(yname,fontsize=8)
+        self.figure.suptitle(name,fontsize=8)
+        self.ax.legend(loc='upper left')
+        self.ax.tick_params(axis='x', labelsize=8)
+        self.ax.tick_params(axis='y', labelsize=8)
+    def on_running(self, error):
+        timec = time.time()
+        self.xdata.append(timec-self.starttime)
+        for i in range(self.num):
+            self.line_objects[i].set_xdata(self.xdata)
+            self.line_objects[i].set_ydata(error[i])
+        self.ax.relim()
+        self.ax.autoscale_view()
+        #We need to draw *and* flush
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
+    def save_plot(self,figname,dataname):
+        self.figure.savefig(figname)
+        fp = open(dataname, mode='a+', newline='')
+        dp = csv.writer(fp)
+        for i in range(self.num):
+            dp.writerow(self.line_objects[i].get_xdata())
+            dp.writerow(self.line_objects[i].get_ydata())   
+        fp.close() 
+
+class KeyboardSubscriber:
+    def __init__(self):
+        self.state=True
+        self.sub=rospy.Subscriber('/keypress', String,self.Key_callback, queue_size=10)
+    def Key_callback(self,msg):
+        s="'q'"
+        if msg.data==s:
+            self.state=False
+        print(msg.data+'received')
+
+
 if __name__ == '__main__':
     try:
         rospy.init_node('mpc_mode')
-        pub = rospy.Publisher('anglevelocity', Float64MultiArray, queue_size=10)
-        enclose_flag_pub=rospy.Publisher('encloseflag',Bool,queue_size=10)
+        QRID=rospy.get_param('~QRID')
+        pointname=rospy.get_param('~feature')
+        pub = rospy.Publisher('anglevelocity'+str(QRID), Float64MultiArray, queue_size=10)
+        enclose_flag_pub=rospy.Publisher('encloseflag'+str(QRID),Bool,queue_size=10)
         vel = [0]*2
         Robot = QRrobot()
         feature=Point_tube()
         Targe_id=Targe_ID()
-        model_errorplot=PlotUpdate(1)
+        # model_errorplot=PlotUpdate(1)
         Obstacle=Obstacle_QR()
+        key=KeyboardSubscriber()
+        save_flag=0
         # Frame=frame_image()
         T = 0.15# sampling time [s]
         N = 30 # prediction horizon
@@ -487,14 +595,24 @@ if __name__ == '__main__':
                     # deltay=(7+(32-Robot.roboty[5]/1.5306122e-3/29.71))*1.5306122e-3
                     IDi=Targe_id.ID-1
                     Target_circle=np.array([Robot.robotx[IDi], Robot.roboty[IDi], r_object* 1.5037594e-3])
-
-                    
+                    Cal_time=Plotupdate('Time'+str(QRID),'calculate time (s)',1,['Time'])
+                    #plot 
+                    Disterror=Plotupdate('Distance'+str(QRID),'distance error (m)',1,['Distance'])
+                    Thetaerror=Plotupdate('Theta'+str(QRID),'thera error (rad)',1,['Theta'])
+                    Jerror=Plotupdate('model'+str(QRID),'model error (m)',1,['Distance'])
+                    calculate_time=[]
+                    save_flag=0
+                    error_x=[]
+                    error_y=[]
+                    error_d=[]
+                    error_theta=[]
+                    error_model=[]
                     xs=[]
                     # for i in range(N_target+2):
                     xs.append(Target_circle[:2])
                     xs=np.array(xs).reshape(-1,1)
                     object_flag=1
-                    
+                    cos_flag=0
                     g = [] # equal constrains
                     lbg = []
                     ubg = []
@@ -586,15 +704,19 @@ if __name__ == '__main__':
                     #     x_center=x_center+x0[6+2*i:8+2*i]
                     x_center=x0[:2]+x0[3:5]+x0[8:10]+x0[6:8]+x0[10:12]
                     x_center=(x_center/(N_target+2)).reshape(1,-1)
+                    if cos_flag==0 and np.linalg.norm(Target_circle[:2]-x_center)<400*1.5037594e-3:
+                        cos_flag=1
                     # update enviroment information
                     # R=70*1.5306122e-3
                     ktheta=1
+                    Kt=10000
                     # if ee[0]>r_object* 1.5037594e-3*1.3 or ee[1]>r_object* 1.5037594e-3*1.3 or ee[2]>r_object* 1.5037594e-3*1.3:
                     if np.linalg.norm(x_center[0]-Target_circle[:2])>r_object* 1.5037594e-3*0.5:
                         enclose_flag=False
                         enclose_flag_pub.publish(enclose_flag)               
-                     
-                        Sf=40* 1.5037594e-3
+
+                        Sf=65* 1.5037594e-3
+                        
                         # x1=np.concatenate(x0)
                         intersectionP=[]
                         intersectionP.append(Obstacle.getnearestpoint(x1[:2])[1])
@@ -602,6 +724,7 @@ if __name__ == '__main__':
                         intersectionP.append(Obstacle.getnearestpoint(x1[6:8])[1])
                         intersectionP.append(Obstacle.getnearestpoint(x1[8:10])[1])
                         intersectionP.append(Obstacle.getnearestpoint(x1[10:12])[1])
+                        start_time = time.time()
                         #the middle point of the tube
                         DO_tube=[]
                         Dx=distence_to_x((x0[:2]+x0[3:5]+x0[8:10]+x0[6:8]+x0[10:12])/(2+N_target),xs,Qr)
@@ -622,12 +745,23 @@ if __name__ == '__main__':
                         obj = 0 #### cost
                         for i in range(N):
                             obj = obj +  ca.mtimes([U[i, :], R, U[i, :].T])+ca.mtimes([(X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T,Qr,((X[i,:2]+X[i,3:5]+X[i,6:8]+X[i,8:10]+X[i,10:12])/(N_target+2)-P[-2:].T).T])-\
-                                ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
-                        for i in range(un):
-                            obj=obj+10000000*ca.if_else(ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2])>Sf,0,(Sf-ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2]))**3)\
-                                +10000000*ca.if_else(ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5])>Sf,0,(Sf-ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5]))**3)
-                            #     Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
-                            #     Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)
+                                ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)+\
+                                Kt*ca.if_else(ca.norm_2(X[i,:2].T-Target_circle[:2])<Target_circle[2]*(ddp+0.5),(ca.norm_2(X[i,:2].T-Target_circle[:2])-Target_circle[2]*(ddp+0.5))**2,0)+\
+                                Kt*ca.if_else(ca.norm_2(X[i,3:5].T-Target_circle[:2])<Target_circle[2]*(ddp+0.5),(ca.norm_2(X[i,3:5].T-Target_circle[:2])-Target_circle[2]*(ddp+0.5))**2,0)
+                            if cos_flag==1:
+                                obj=obj-ktheta*ca.dot(-X[i,8:10]+Target_circle[:2].reshape(1,-1),(X[i,:2]+X[i,3:5])/2-X[i,8:10])/ca.norm_2(-X[i,8:10]+Target_circle[:2].reshape(1,-1))/ca.norm_2(-X[i,8:10]+(X[i,:2]+X[i,3:5])/2)
+                            for f_tube in range(N_target):
+                                obj=obj+Kt*ca.if_else(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2(X[i,6+2*f_tube:8+2*f_tube].T-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
+                            obj=obj+Kt*ca.if_else(ca.norm_2((X[i,3:5].T+X[i,10:].T)/2-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2((X[i,3:5].T+X[i,10:].T)/2-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
+                            obj=obj+Kt*ca.if_else(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2])<Target_circle[2]*ddp,(ca.norm_2((X[i,:2].T+X[i,6:8].T)/2-Target_circle[:2])-Target_circle[2]*ddp)**2,0)
+                            # beta scaled
+                        # for i in range(un):
+                            obj=obj+10000000*ca.if_else(ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2])>Sf,0,(-1/Sf+1/ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2]))**2)\
+                                +10000000*ca.if_else(ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5])>Sf,0,(-1/Sf+1/ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5]))**2)
+                            for j in range(3):
+                                obj=obj+10000000*ca.if_else(ca.norm_2(ca.DM(intersectionP[j+2][0].reshape(1,-1))- X[i,6+2*j:8+2*j])>Sf,0,(-1/Sf+1/ca.norm_2(ca.DM(intersectionP[j+2][0].reshape(1,-1))- X[i,6+2*j:8+2*j]))**2) 
+                                # Ko[0]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[0][0].reshape(1,-1))- X[i,:2], ca.DM(intersectionP[0][1].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][0].reshape(1,-1)) - X[i,:2]) / ca.norm_2(ca.DM(intersectionP[0][1].reshape(1,-1))- X[i,:2]))+b)-\
+                                # Ko[1]*ca.tanh(a*(ca.dot(ca.DM(intersectionP[1][0].reshape(1,-1))- X[i,3:5], ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][0].reshape(1,-1)) - X[i,3:5]) / ca.norm_2(ca.DM(intersectionP[1][1].reshape(1,-1)) - X[i,3:5]))+b)
                             # for f_tube in range(N_target):
                             #     obj = obj -(Ko_tube[f_tube])*ca.tanh(a*(ca.dot(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube], ca.DM(intersectionP[2+f_tube][1].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][0].reshape(1,-1)) - X[i,6+2*f_tube:8+2*f_tube]) / ca.norm_2(ca.DM(intersectionP[2+f_tube][1].reshape(1,-1))- X[i,6+2*f_tube:8+2*f_tube]) )+b)
                             # if np.linalg.norm(x_center[0]-Target_circle[:2])/1.5037594e-3 <200:
@@ -651,19 +785,26 @@ if __name__ == '__main__':
                         nlp_prob = {'f': obj, 'x': ca.reshape(U, -1, 1), 'p':P, 'g':ca.vertcat(*g)}
                         opts_setting = {'ipopt.max_iter':100, 'ipopt.print_level':0, 'print_time':0, 'ipopt.acceptable_tol':1e-8, 'ipopt.acceptable_obj_change_tol':1e-6}
                         solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
-    
+                        
                         ## set parameter
                         c_p = np.concatenate((x0, xs))
                         init_control = ca.reshape(u0, -1, 1)
                         t_ = time.time()
                         res = solver(x0=init_control, p=c_p, lbg=lbg, lbx=lbx, ubg=ubg, ubx=ubx)
                         # index_t.append(time.time()- t_)
+                        
+                        elapsed_time = time.time() - start_time
+                        print("Execution time: {:.2f} seconds".format(elapsed_time))
+                        calculate_time.append(elapsed_time)
+                        calculate_time_update=[calculate_time]
+                        Cal_time.on_running(calculate_time_update)
                         u_sol = ca.reshape(res['x'],  N, n_controls*2) # one can only have this shape of the output
                         # ff_value = ff(u_sol, c_p) # [n_states, N]
                         x_next, u0 = shift_movement(T, x0, u_sol, f,un,J)
                         # x_c.append(ff_value)
                         u_c.append(np.array(u_sol.full()))
                         xx.append(x0.tolist())
+                       
                         vel=v2w(np.array(u_sol.full()),un)
                         for i in range(un):
                             vel_msg = Float64MultiArray(data=vel[i,:])
@@ -677,9 +818,16 @@ if __name__ == '__main__':
                         pub.publish(vel_msg)
                         d = rospy.Duration(0.001)
                         rospy.sleep(d)
+                        if key.state is False and save_flag==0:
+                            save_flag=1
+                            Cal_time.save_plot('Cal_time_EGO'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','Cal_time'+str(QRID)+'target'+str(Targe_id.ID)+'.csv')
+                            # Disterror.save_plot('EGOdistanceerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','EGOdistance'+str(QRID)+'target'+str(Targe_id.ID)+'.csv')
+                            # Thetaerror.save_plot('EGOthetaerror'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','EGOtheta'+str(QRID)+'target'+str(Targe_id.ID)+'.csv')
+                            # Jerror.save_plot('EGOerror_model'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','EGOmodelerror'+str(QRID)+'target'+str(Targe_id.ID)+'.csv')
 
                         
                     else:
+                        Cal_time.save_plot('Cal_time_EGO'+str(QRID)+'Target'+str(Targe_id.ID)+'.png','Cal_time'+str(QRID)+'target'+str(Targe_id.ID)+'.csv')
                         # ran_vel=np.zeros((1,4))
                         # vel_msg = Float64MultiArray(data=ran_vel[0])
                         # rospy.loginfo(vel_msg)

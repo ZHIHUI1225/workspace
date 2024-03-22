@@ -204,8 +204,11 @@ class Visualize //速度控制类
 					//读取圆心
 					// deltax=20+(44-robot_new.position.x)/25.65;
 					// deltay=7+(32-robot_new.position.y)/29.71;
-					deltax=20+(44-xnew)/25.65;
-					deltay=7+(32-ynew)/29.71;
+					// deltax=20+(44-xnew)/25.65;
+					// deltax=8-(xnew-43)/58.375;
+					// deltay=7+(32-ynew)/29.71;
+					deltax=0;
+					deltay=0;
 					robot_new.position.x = xnew+deltax;
 					robot_new.position.y = ynew+deltay;
 					robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
@@ -222,15 +225,17 @@ class Visualize //速度控制类
 					if (markerIds[i]<10 && markerIds[i]>5){
 					//读取圆心
 					// deltax=8-16/1062*(xnew-66);
-					deltax=8-(xnew-43)/58.375;
-					deltay=7+(32-ynew)/29.71;
+					// deltax=8-(xnew-43)/58.375;
+					// deltay=7+(32-ynew)/29.71;
+					deltax=0;
+					deltay=0;
 					robot_new.position.x = xnew+deltax;
 					robot_new.position.y = ynew+deltay;
 					robot_new.yaw = atan2(markerCorners[i][0].y - markerCorners[i][3].y, markerCorners[i][0].x - markerCorners[i][3].x); // atan2(markerCorners[i][1].y - markerCorners[i][0].y, markerCorners[i][1].x - markerCorners[i][0].x)
 					robot_array_new.robot_pose_array.push_back(robot_new);
 					Point center(cvRound(robot_new.position.x ), cvRound(robot_new.position.y));
 					//读取半径
-					int radius = cvRound(32);
+					int radius = cvRound(40);
 					// cv::imshow("cicle",frame_cut);
 					//绘制圆
 					circle(frame_cut, center, radius, Scalar(0, 0, 255), 1, 8, 0);
@@ -240,8 +245,10 @@ class Visualize //速度控制类
 						robot_msg::robot_pose obstacle;
 						obstacle.ID.data = markerIds[i];
 						if (markerIds[i]==1){
-							deltax=8-(xnew-43)/58.375;
-							deltay=7+(32-ynew)/29.71;
+							// deltax=8-(xnew-43)/58.375;
+							// deltay=7+(32-ynew)/29.71;
+							deltax=0;
+							deltay=0;
 							obstacle.position.x = xnew+deltax;
 							obstacle.position.y = ynew+deltay;
 							int radius = cvRound(60);
@@ -270,10 +277,124 @@ class Visualize //速度控制类
 					}
 			}
 		}
+	// cv::imshow("cicle",frame_cut);
 	// Point center(500,200);
 	// circle(frame_cut, center, 35, Scalar(0, 255, 255), 1,8,0); 
 	robot_pub_.publish(robot_array_new);
-	obstacle_pub_.publish(obstacle_array);
+	// new obstacle
+	robot_msg::robot_pose O;
+	robot_msg::robot_pose_array O_array;
+
+	O.ID.data=2;
+	O.position.x=529;
+	O.position.y=216;
+	O_array.robot_pose_array.push_back(O);
+	O.ID.data=3;
+	O.position.x=527;
+	O.position.y=247;
+	O_array.robot_pose_array.push_back(O);
+	O.ID.data=4;
+	O.position.x=590;
+	O.position.y=248;
+	O_array.robot_pose_array.push_back(O);
+	O.ID.data=5;
+	O.position.x=590;
+	O.position.y=219;
+	O_array.robot_pose_array.push_back(O);
+
+
+	// rectangular vertical
+	// O.ID.data=2;
+	// O.position.x=510;
+	// O.position.y=217;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=3;
+	// O.position.x=666;
+	// O.position.y=220;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=4;
+	// O.position.x=665;
+	// O.position.y=282;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=5;
+	// O.position.x=509;
+	// O.position.y=279;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=6;
+	// O.position.x=588;
+	// O.position.y=280;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=7;
+	// O.position.x=589;
+	// O.position.y=219;
+	// O_array.robot_pose_array.push_back(O);
+
+
+
+	// snake obstacle
+	// O.ID.data=2;
+	// O.position.x=476;
+	// O.position.y=273;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=3;
+	// O.position.x=494;
+	// O.position.y=249;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=4;
+	// O.position.x=523;
+	// O.position.y=234;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=5;
+	// O.position.x=555;
+	// O.position.y=239;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=6;
+	// O.position.x=579;
+	// O.position.y=257;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=7;
+	// O.position.x=612;
+	// O.position.y=253;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=8;
+	// O.position.x=634;
+	// O.position.y=230;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=9;
+	// O.position.x=662;
+	// O.position.y=220;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=10;
+	// O.position.x=657;
+	// O.position.y=250;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=11;
+	// O.position.x=637;
+	// O.position.y=275;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=12;
+	// O.position.x=615;
+	// O.position.y=285;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=13;
+	// O.position.x=585;
+	// O.position.y=287;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=14;
+	// O.position.x=565;
+	// O.position.y=280;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=15;
+	// O.position.x=537;
+	// O.position.y=264;
+	// O_array.robot_pose_array.push_back(O);
+	// O.ID.data=16;
+	// O.position.x=508;
+	// O.position.y=274;
+	// O_array.robot_pose_array.push_back(O);
+
+	obstacle_pub_.publish(O_array);
+	// obstacle_pub_.publish(obstacle_array);
 	
 	//give the mask of the system to detetct red points
 	cv::Mat mask12 = cv::Mat::zeros(frame_cut.rows, frame_cut.cols, CV_8UC1);

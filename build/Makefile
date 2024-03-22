@@ -909,6 +909,162 @@ beginner_tutorials_genpy/fast:
 .PHONY : beginner_tutorials_genpy/fast
 
 #=============================================================================
+# Target rules for targets named keyboard_publisher_geneus
+
+# Build rule for target.
+keyboard_publisher_geneus: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_geneus
+.PHONY : keyboard_publisher_geneus
+
+# fast build rule for target.
+keyboard_publisher_geneus/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build
+.PHONY : keyboard_publisher_geneus/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages_cpp
+
+# Build rule for target.
+keyboard_publisher_generate_messages_cpp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages_cpp
+.PHONY : keyboard_publisher_generate_messages_cpp
+
+# fast build rule for target.
+keyboard_publisher_generate_messages_cpp/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build
+.PHONY : keyboard_publisher_generate_messages_cpp/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_gencpp
+
+# Build rule for target.
+keyboard_publisher_gencpp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_gencpp
+.PHONY : keyboard_publisher_gencpp
+
+# fast build rule for target.
+keyboard_publisher_gencpp/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build
+.PHONY : keyboard_publisher_gencpp/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_gennodejs
+
+# Build rule for target.
+keyboard_publisher_gennodejs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_gennodejs
+.PHONY : keyboard_publisher_gennodejs
+
+# fast build rule for target.
+keyboard_publisher_gennodejs/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build
+.PHONY : keyboard_publisher_gennodejs/fast
+
+#=============================================================================
+# Target rules for targets named _keyboard_publisher_generate_messages_check_deps_KeyEvent
+
+# Build rule for target.
+_keyboard_publisher_generate_messages_check_deps_KeyEvent: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 _keyboard_publisher_generate_messages_check_deps_KeyEvent
+.PHONY : _keyboard_publisher_generate_messages_check_deps_KeyEvent
+
+# fast build rule for target.
+_keyboard_publisher_generate_messages_check_deps_KeyEvent/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build.make keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build
+.PHONY : _keyboard_publisher_generate_messages_check_deps_KeyEvent/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages_lisp
+
+# Build rule for target.
+keyboard_publisher_generate_messages_lisp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages_lisp
+.PHONY : keyboard_publisher_generate_messages_lisp
+
+# fast build rule for target.
+keyboard_publisher_generate_messages_lisp/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build
+.PHONY : keyboard_publisher_generate_messages_lisp/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_genpy
+
+# Build rule for target.
+keyboard_publisher_genpy: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_genpy
+.PHONY : keyboard_publisher_genpy
+
+# fast build rule for target.
+keyboard_publisher_genpy/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build
+.PHONY : keyboard_publisher_genpy/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_genlisp
+
+# Build rule for target.
+keyboard_publisher_genlisp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_genlisp
+.PHONY : keyboard_publisher_genlisp
+
+# fast build rule for target.
+keyboard_publisher_genlisp/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build
+.PHONY : keyboard_publisher_genlisp/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages_nodejs
+
+# Build rule for target.
+keyboard_publisher_generate_messages_nodejs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages_nodejs
+.PHONY : keyboard_publisher_generate_messages_nodejs
+
+# fast build rule for target.
+keyboard_publisher_generate_messages_nodejs/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build
+.PHONY : keyboard_publisher_generate_messages_nodejs/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages
+
+# Build rule for target.
+keyboard_publisher_generate_messages: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages
+.PHONY : keyboard_publisher_generate_messages
+
+# fast build rule for target.
+keyboard_publisher_generate_messages/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build
+.PHONY : keyboard_publisher_generate_messages/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages_eus
+
+# Build rule for target.
+keyboard_publisher_generate_messages_eus: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages_eus
+.PHONY : keyboard_publisher_generate_messages_eus
+
+# fast build rule for target.
+keyboard_publisher_generate_messages_eus/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build
+.PHONY : keyboard_publisher_generate_messages_eus/fast
+
+#=============================================================================
+# Target rules for targets named keyboard_publisher_generate_messages_py
+
+# Build rule for target.
+keyboard_publisher_generate_messages_py: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher_generate_messages_py
+.PHONY : keyboard_publisher_generate_messages_py
+
+# fast build rule for target.
+keyboard_publisher_generate_messages_py/fast:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build
+.PHONY : keyboard_publisher_generate_messages_py/fast
+
+#=============================================================================
 # Target rules for targets named camera_node
 
 # Build rule for target.
@@ -1615,6 +1771,18 @@ help:
 	@echo "... beginner_tutorials_generate_messages_eus"
 	@echo "... beginner_tutorials_generate_messages_py"
 	@echo "... beginner_tutorials_genpy"
+	@echo "... keyboard_publisher_geneus"
+	@echo "... keyboard_publisher_generate_messages_cpp"
+	@echo "... keyboard_publisher_gencpp"
+	@echo "... keyboard_publisher_gennodejs"
+	@echo "... _keyboard_publisher_generate_messages_check_deps_KeyEvent"
+	@echo "... keyboard_publisher_generate_messages_lisp"
+	@echo "... keyboard_publisher_genpy"
+	@echo "... keyboard_publisher_genlisp"
+	@echo "... keyboard_publisher_generate_messages_nodejs"
+	@echo "... keyboard_publisher_generate_messages"
+	@echo "... keyboard_publisher_generate_messages_eus"
+	@echo "... keyboard_publisher_generate_messages_py"
 	@echo "... camera_node"
 	@echo "... uuid_msgs_generate_messages_py"
 	@echo "... uuid_msgs_generate_messages_nodejs"

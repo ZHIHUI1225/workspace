@@ -58,6 +58,7 @@ all: robot_mag/all
 all: starlaunch/all
 all: beginner_tutorials/all
 all: co_transform/all
+all: keyboard_publisher/all
 all: mpc/all
 all: obstacle_detect/all
 all: pulling/all
@@ -74,6 +75,7 @@ preinstall: robot_mag/preinstall
 preinstall: starlaunch/preinstall
 preinstall: beginner_tutorials/preinstall
 preinstall: co_transform/preinstall
+preinstall: keyboard_publisher/preinstall
 preinstall: mpc/preinstall
 preinstall: obstacle_detect/preinstall
 preinstall: pulling/preinstall
@@ -95,6 +97,7 @@ clean: robot_mag/clean
 clean: starlaunch/clean
 clean: beginner_tutorials/clean
 clean: co_transform/clean
+clean: keyboard_publisher/clean
 clean: mpc/clean
 clean: obstacle_detect/clean
 clean: pulling/clean
@@ -291,6 +294,35 @@ gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest_main.dir/clean
 gtest/googletest/clean: gtest/googletest/CMakeFiles/gtest.dir/clean
 
 .PHONY : gtest/googletest/clean
+
+#=============================================================================
+# Directory level rules for directory keyboard_publisher
+
+# Recursive "all" directory target.
+keyboard_publisher/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all
+
+.PHONY : keyboard_publisher/all
+
+# Recursive "preinstall" directory target.
+keyboard_publisher/preinstall:
+
+.PHONY : keyboard_publisher/preinstall
+
+# Recursive "clean" directory target.
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/clean
+keyboard_publisher/clean: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/clean
+
+.PHONY : keyboard_publisher/clean
 
 #=============================================================================
 # Directory level rules for directory learning_tf
@@ -761,7 +793,7 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/all: robot_mag/CMake
 robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/all: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_target_pose.dir/all
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/depend
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=35,36,37,38 "Built target robot_msg_generate_messages_nodejs"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=42,43,44,45 "Built target robot_msg_generate_messages_nodejs"
 .PHONY : robot_mag/CMakeFiles/robot_msg_generate_messages_nodejs.dir/all
 
 # Build rule for subdir invocation for target.
@@ -927,7 +959,7 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/all: robot_mag/CMakeFile
 robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/all: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_target_pose.dir/all
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/depend
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=39,40,41,42,43 "Built target robot_msg_generate_messages_py"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=46,47,48,49,50 "Built target robot_msg_generate_messages_py"
 .PHONY : robot_mag/CMakeFiles/robot_msg_generate_messages_py.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1421,7 +1453,7 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/all: robot_mag/CMakeFil
 robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/all: robot_mag/CMakeFiles/geometry_msgs_generate_messages_cpp.dir/all
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/depend
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=22,23,24,25 "Built target robot_msg_generate_messages_cpp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=29,30,31,32 "Built target robot_msg_generate_messages_cpp"
 .PHONY : robot_mag/CMakeFiles/robot_msg_generate_messages_cpp.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1533,7 +1565,7 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/all: robot_mag/CMakeFi
 robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/all: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_target_pose.dir/all
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/depend
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=31,32,33,34 "Built target robot_msg_generate_messages_lisp"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=38,39,40,41 "Built target robot_msg_generate_messages_lisp"
 .PHONY : robot_mag/CMakeFiles/robot_msg_generate_messages_lisp.dir/all
 
 # Build rule for subdir invocation for target.
@@ -1564,7 +1596,7 @@ robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/all: robot_mag/CMakeFil
 robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/all: robot_mag/CMakeFiles/_robot_msg_generate_messages_check_deps_target_pose.dir/all
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/depend
 	$(MAKE) -f robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/build.make robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=26,27,28,29,30 "Built target robot_msg_generate_messages_eus"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=33,34,35,36,37 "Built target robot_msg_generate_messages_eus"
 .PHONY : robot_mag/CMakeFiles/robot_msg_generate_messages_eus.dir/all
 
 # Build rule for subdir invocation for target.
@@ -2024,6 +2056,339 @@ beginner_tutorials_genpy: beginner_tutorials/CMakeFiles/beginner_tutorials_genpy
 beginner_tutorials/CMakeFiles/beginner_tutorials_genpy.dir/clean:
 	$(MAKE) -f beginner_tutorials/CMakeFiles/beginner_tutorials_genpy.dir/build.make beginner_tutorials/CMakeFiles/beginner_tutorials_genpy.dir/clean
 .PHONY : beginner_tutorials/CMakeFiles/beginner_tutorials_genpy.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_geneus"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_geneus: keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/rule
+
+.PHONY : keyboard_publisher_geneus
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_geneus.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all: robot_mag/CMakeFiles/std_msgs_generate_messages_cpp.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=22 "Built target keyboard_publisher_generate_messages_cpp"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages_cpp: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages_cpp
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_gencpp"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_gencpp: keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/rule
+
+.PHONY : keyboard_publisher_gencpp
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gencpp.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_gennodejs"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_gennodejs: keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/rule
+
+.PHONY : keyboard_publisher_gennodejs
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_gennodejs.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build.make keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build.make keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target _keyboard_publisher_generate_messages_check_deps_KeyEvent"
+.PHONY : keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/rule
+
+# Convenience name for target.
+_keyboard_publisher_generate_messages_check_deps_KeyEvent: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/rule
+
+.PHONY : _keyboard_publisher_generate_messages_check_deps_KeyEvent
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/build.make keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all: robot_mag/CMakeFiles/std_msgs_generate_messages_lisp.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=25 "Built target keyboard_publisher_generate_messages_lisp"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages_lisp: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages_lisp
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_genpy"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_genpy: keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/rule
+
+.PHONY : keyboard_publisher_genpy
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genpy.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_genlisp"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_genlisp: keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/rule
+
+.PHONY : keyboard_publisher_genlisp
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_genlisp.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all: robot_mag/CMakeFiles/std_msgs_generate_messages_nodejs.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=26 "Built target keyboard_publisher_generate_messages_nodejs"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 1
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages_nodejs: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages_nodejs
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_cpp.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_lisp.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_nodejs.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num= "Built target keyboard_publisher_generate_messages"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 7
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all: robot_mag/CMakeFiles/std_msgs_generate_messages_eus.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=23,24 "Built target keyboard_publisher_generate_messages_eus"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages_eus: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages_eus
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_eus.dir/clean
+
+#=============================================================================
+# Target rules for target keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir
+
+# All Build rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all: robot_mag/CMakeFiles/std_msgs_generate_messages_py.dir/all
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all: keyboard_publisher/CMakeFiles/_keyboard_publisher_generate_messages_check_deps_KeyEvent.dir/all
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/depend
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=27,28 "Built target keyboard_publisher_generate_messages_py"
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all
+
+# Build rule for subdir invocation for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 2
+	$(MAKE) -f CMakeFiles/Makefile2 keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/romi/workspace/build/CMakeFiles 0
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/rule
+
+# Convenience name for target.
+keyboard_publisher_generate_messages_py: keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/rule
+
+.PHONY : keyboard_publisher_generate_messages_py
+
+# clean rule for target.
+keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/clean:
+	$(MAKE) -f keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/build.make keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/clean
+.PHONY : keyboard_publisher/CMakeFiles/keyboard_publisher_generate_messages_py.dir/clean
 
 #=============================================================================
 # Target rules for target camera_drive/CMakeFiles/camera_node.dir
@@ -3406,7 +3771,7 @@ agent_position/CMakeFiles/actionlib_generate_messages_nodejs.dir/clean:
 learning_tf/CMakeFiles/tf_broadcaster.dir/all:
 	$(MAKE) -f learning_tf/CMakeFiles/tf_broadcaster.dir/build.make learning_tf/CMakeFiles/tf_broadcaster.dir/depend
 	$(MAKE) -f learning_tf/CMakeFiles/tf_broadcaster.dir/build.make learning_tf/CMakeFiles/tf_broadcaster.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=44,45 "Built target tf_broadcaster"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/romi/workspace/build/CMakeFiles --progress-num=51,52 "Built target tf_broadcaster"
 .PHONY : learning_tf/CMakeFiles/tf_broadcaster.dir/all
 
 # Build rule for subdir invocation for target.

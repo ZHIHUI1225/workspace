@@ -557,26 +557,15 @@ if __name__ == '__main__':
                         dist_error.append(np.linalg.norm(Target_circle[:2]-x1[-2:]))
                         model_errorplot.on_running(model_error_x,model_error_y)
                         distance_error.on_running(dist_error)
-
-                    # x0 = np.array([Robot.robotx[0], Robot.roboty[0],Robot.robotyaw[0],Robot.robotx[1], Robot.roboty[1],Robot.robotyaw[1],Robot.robotx[2],Robot.roboty[2]]).reshape(-1, 1)# initial state
-                    # ee=[np.linalg.norm(x0[-2:]-xs[-2:])]
-                    
-                    # for i in range(1,N_target,1):
-                    #     ee.append(np.linalg.norm(x0[-2*i-2:-2*i]-xs[-2*i-2:-2*i]))
-                    # x_center=x0[:2]+x0[3:5]
-        
                     x_center=x0[6:8]
                     x_center=np.concatenate(x_center)
-                    # if np.linalg.norm(x_center-Target_circle[:2])>r_object* 1.5037594e-3:
                     if  np.linalg.norm(x_center[0]-Targe_zone.target.x)> 40* 1.5037594e-3 or np.linalg.norm(x_center[1]-Targe_zone.target.y)> 35* 1.5037594e-3:
-                    # if  x_center[0]<Target_circle[0]:
                         transport_flag=False
                         transport_flag_pub.publish(transport_flag)
                         # update the cost function                   
                         # kcos=2
                         Sf=0.5
                         Smin=0
-                        
                         x1=np.concatenate(x0)
                         intersectionP=[]
                         intersectionP.append(Obstacle.calculateP(x1[:2]).copy())

@@ -510,6 +510,12 @@ gtest_main_LIB_DEPENDS:STATIC=general;gtest;
 image_transport_DIR:PATH=/opt/ros/noetic/share/image_transport/cmake
 
 //Value Computed by CMake
+keyboard_publisher_BINARY_DIR:STATIC=/home/romi/workspace/build/keyboard_publisher
+
+//Value Computed by CMake
+keyboard_publisher_SOURCE_DIR:STATIC=/home/romi/workspace/src/keyboard_publisher
+
+//Value Computed by CMake
 learning_tf_BINARY_DIR:STATIC=/home/romi/workspace/build/learning_tf
 
 //Value Computed by CMake
@@ -786,7 +792,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=15
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=16
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
